@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/dist/
+*.tsbuildinfo
+
+# Environment and secrets (keep **/.env.example tracked)
+.env
+server/.env
+
+# Logs and OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# IDE / tooling
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Uploads (local dev)
+server/uploads/
+
+# Coverage
+coverage/
