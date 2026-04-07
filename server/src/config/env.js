@@ -35,8 +35,8 @@ export const env = {
   },
   uploadDir: path.resolve(process.cwd(), process.env.UPLOAD_DIR || './uploads'),
   maxUploadMb: Number(process.env.MAX_UPLOAD_MB || 5),
-  /** Persist one row per /api request (except health) to application_logs */
-  logHttpToDb: process.env.LOG_HTTP_TO_DB !== 'false',
-  /** Persist server errors (5xx + stacks) to application_logs (avoids duplicate HTTP row) */
+  /** Persist HTTP access rows to application_logs (off by default; table is for errors only) */
+  logHttpToDb: process.env.LOG_HTTP_TO_DB === 'true',
+  /** Persist server errors (5xx) as structured JSON in application_logs.meta */
   logErrorsToDb: process.env.LOG_ERRORS_TO_DB !== 'false',
 };

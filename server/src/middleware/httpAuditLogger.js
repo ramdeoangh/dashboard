@@ -5,8 +5,8 @@ import { writeApplicationLog } from '../services/dbLogService.js';
 const SKIP_PATHS = new Set(['/api/health']);
 
 /**
- * Assigns correlation id, then on response finish writes one HTTP audit row (async).
- * Skips when LOG_HTTP_TO_DB=false or path is excluded.
+ * Assigns correlation id; optionally writes one HTTP audit row on finish when LOG_HTTP_TO_DB=true.
+ * Default is off so application_logs holds errors only (structured JSON in meta).
  */
 export function httpAuditLogger(req, res, next) {
   const incoming = req.headers['x-correlation-id'];

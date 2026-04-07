@@ -1,8 +1,27 @@
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import api from '../api/client.js';
+import ProfileMenu from '../components/ProfileMenu.jsx';
 
 export default function PortalLayout() {
   const { user, logout, isAdminNav } = useAuth();
+  const [portalName, setPortalName] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await api.get('/portal/bootstrap');
+        if (!cancelled) setPortalName(data.data?.portalName || 'Portal');
+      } catch {
+        if (!cancelled) setPortalName('Portal');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="portal-root">
@@ -10,8 +29,7 @@ export default function PortalLayout() {
         <div className="nav-brand">
           <div className="nav-logo">PR</div>
           <div className="nav-title">
-            <span>Project reporting</span>
-            <small>Portal</small>
+            <span>{portalName || '…'}</span>
           </div>
         </div>
         <nav className="nav-links">
@@ -28,10 +46,7 @@ export default function PortalLayout() {
           )}
         </nav>
         <div className="nav-right">
-          <span className="user-pill">{user?.displayName || user?.username}</span>
-          <button type="button" className="btn btn-ghost" onClick={() => logout()}>
-            Sign out
-          </button>
+          <ProfileMenu onSignOut={() => logout()} variant="portal" />
         </div>
       </header>
       <main className="portal-main">
@@ -60,7 +75,6 @@ export default function PortalLayout() {
         .nav-links a.active { color: var(--gold); }
         .admin-link { color: var(--gold) !important; font-weight: 600 !important; }
         .nav-right { display: flex; align-items: center; gap: 10px; }
-        .user-pill { color: var(--teal-light); font-size: 13px; }
         .portal-main { flex: 1; padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
       `}</style>
     </div>

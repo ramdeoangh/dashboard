@@ -16,6 +16,7 @@ const menuBody = z.object({
   path: z.string().max(255).optional(),
   icon: z.string().max(100).nullable().optional(),
   sort_order: z.number().int().optional(),
+  is_active: z.boolean(),
   roleIds: z.array(z.number().int().positive()).optional(),
 });
 
@@ -25,6 +26,7 @@ const submenuBody = z.object({
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/),
   path: z.string().max(255).optional(),
   sort_order: z.number().int().optional(),
+  is_active: z.boolean(),
   roleIds: z.array(z.number().int().positive()).optional(),
 });
 

@@ -10,7 +10,7 @@ export async function listUsers() {
             GROUP_CONCAT(r.slug) AS role_slugs
      FROM users u
      LEFT JOIN user_roles ur ON ur.user_id = u.id
-     LEFT JOIN roles r ON r.id = ur.role_id
+     LEFT JOIN roles r ON r.id = ur.role_id AND r.status = 1
      GROUP BY u.id
      ORDER BY u.id`
   );

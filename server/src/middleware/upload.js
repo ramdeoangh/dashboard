@@ -22,7 +22,8 @@ export function createProjectImageUploader() {
           cb(new Error('Missing project upload folder context'));
           return;
         }
-        const slot = file.fieldname === 'oldPhoto' ? 'before' : 'after';
+        const slot =
+          file.fieldname === 'oldPhoto' || file.fieldname === 'beforePhotos' ? 'before' : 'after';
         const dest = path.join(env.uploadDir, 'projects', String(key), slot);
         ensureDir(dest);
         cb(null, dest);
@@ -33,7 +34,7 @@ export function createProjectImageUploader() {
         cb(null, `${Date.now()}-${Math.random().toString(36).slice(2)}${safe}`);
       },
     }),
-    limits: { fileSize: env.maxUploadMb * 1024 * 1024, files: 2 },
+    limits: { fileSize: env.maxUploadMb * 1024 * 1024, files: 24 },
     fileFilter: (req, file, cb) => {
       if (allowedMime.has(file.mimetype)) cb(null, true);
       else cb(new Error('Only JPEG, PNG, WebP, or GIF images are allowed'));

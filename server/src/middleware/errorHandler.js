@@ -28,17 +28,35 @@ export function errorHandler(err, req, res, next) {
     logger.error(err.message, { stack: err.stack, path: req.path });
     if (env.logErrorsToDb) {
       req.skipHttpAuditDb = true;
+      const pathStr = (req.originalUrl || req.url || '').slice(0, 500);
       void writeApplicationLog({
         correlationId: req.correlationId,
         level: 'error',
         message: err.message?.slice(0, 1000) || 'Server error',
         meta: {
-          stack: env.isProd ? undefined : err.stack,
-          name: err.name,
-          path: req.originalUrl || req.url,
+          event: 'server_error',
+          occurredAt: new Date().toISOString(),
+          error: {
+            name: err.name || 'Error',
+            message: err.message || 'Server error',
+            ...(env.isProd ? {} : { stack: err.stack }),
+          },
+          request: {
+            method: req.method,
+            path: pathStr,
+            statusCode: status,
+          },
+          correlationId: req.correlationId,
+          client: {
+            ip: req.ip || null,
+            userAgent: req.get('user-agent') || null,
+          },
+          user: req.auth?.userId
+            ? { id: req.auth.userId, username: req.auth.username }
+            : null,
         },
         method: req.method,
-        path: (req.originalUrl || req.url || '').slice(0, 500),
+        path: pathStr,
         statusCode: status,
         userId: req.auth?.userId ?? null,
         ip: req.ip,

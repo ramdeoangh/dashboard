@@ -2,25 +2,26 @@ import { getPool } from '../config/database.js';
 
 export async function portalStats() {
   const pool = getPool();
-  const [[{ total }]] = await pool.query(
-    `SELECT COUNT(*) AS total FROM projects WHERE status = 1 AND is_approved = 1`
+  const [[{ totalProjects }]] = await pool.query(
+    `SELECT COUNT(*) AS totalProjects FROM projects WHERE status = 1 AND is_submitted = 1`
   );
-  const [byState] = await pool.query(
-    `SELECT s.id, s.name, s.code, COUNT(p.id) AS project_count
-     FROM states s
-     LEFT JOIN projects p ON p.state_id = s.id AND p.status = 1 AND p.is_approved = 1
-     GROUP BY s.id, s.name, s.code
-     ORDER BY s.sort_order, s.name`
+  const [[{ totalStates }]] = await pool.query(
+    `SELECT COUNT(*) AS totalStates FROM states WHERE is_active = 1`
   );
-  const [recent] = await pool.query(
-    `SELECT p.id, p.project_name, p.updated_at, s.name AS state_name
-     FROM projects p
-     INNER JOIN states s ON s.id = p.state_id
-     WHERE p.status = 1 AND p.is_approved = 1
-     ORDER BY p.updated_at DESC
-     LIMIT 8`
+  const [[{ totalLocations }]] = await pool.query(
+    `SELECT COUNT(*) AS totalLocations FROM locations WHERE is_active = 1`
   );
-  return { totalProjects: total, byState, recentUpdates: recent };
+  const [[{ totalBeneficiaries }]] = await pool.query(
+    `SELECT COUNT(*) AS totalBeneficiaries FROM projects
+     WHERE status = 1 AND is_submitted = 1
+       AND beneficiary_details IS NOT NULL AND beneficiary_details != ''`
+  );
+  return {
+    totalProjects,
+    totalStates,
+    totalLocations,
+    totalBeneficiaries,
+  };
 }
 
 export async function adminStats() {

@@ -18,7 +18,7 @@ export async function loadUserAuthz(userId) {
            GROUP_CONCAT(DISTINCT p.slug) AS perm_slugs
     FROM users u
     LEFT JOIN user_roles ur ON ur.user_id = u.id
-    LEFT JOIN roles r ON r.id = ur.role_id
+    LEFT JOIN roles r ON r.id = ur.role_id AND r.status = 1
     LEFT JOIN role_permissions rp ON rp.role_id = r.id
     LEFT JOIN permissions p ON p.id = rp.permission_id
     WHERE u.id = :uid
@@ -51,8 +51,8 @@ export async function getNavForUser(roleSlugs) {
     SELECT DISTINCT m.id, m.name, m.slug, m.path, m.icon, m.sort_order
     FROM menus m
     INNER JOIN menu_roles mr ON mr.menu_id = m.id
-    INNER JOIN roles r ON r.id = mr.role_id
-    WHERE r.slug IN (${placeholders})
+    INNER JOIN roles r ON r.id = mr.role_id AND r.status = 1
+    WHERE r.slug IN (${placeholders}) AND m.status = 1
     ORDER BY m.sort_order ASC, m.id ASC
     `,
     roleSlugs
@@ -63,8 +63,8 @@ export async function getNavForUser(roleSlugs) {
     SELECT DISTINCT s.id, s.menu_id, s.name, s.slug, s.path, s.sort_order
     FROM submenus s
     INNER JOIN submenu_roles sr ON sr.submenu_id = s.id
-    INNER JOIN roles r ON r.id = sr.role_id
-    WHERE r.slug IN (${placeholders})
+    INNER JOIN roles r ON r.id = sr.role_id AND r.status = 1
+    WHERE r.slug IN (${placeholders}) AND s.status = 1
     ORDER BY s.menu_id ASC, s.sort_order ASC, s.id ASC
     `,
     roleSlugs

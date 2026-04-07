@@ -10,23 +10,43 @@ router.use(requireAuth);
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 
-const createBody = z.object({
-  email: z.string().email().max(255),
-  username: z.string().min(2).max(100).regex(/^[a-zA-Z0-9._-]+$/),
-  password: z.string().min(8).max(200),
-  display_name: z.string().max(255).optional(),
-  is_active: z.boolean().optional(),
-  role_ids: z.array(z.number().int().positive()).optional(),
-});
+const usernameEmailRefine = (data, ctx) => {
+  const { username, email } = data;
+  if (username === email) {
+    const ok = z.string().email().safeParse(username);
+    if (!ok.success) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Username must be a valid email when same as email', path: ['username'] });
+    }
+  } else if (!/^[a-zA-Z0-9._-]+$/.test(username)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'Username may only contain letters, digits, dot, underscore, hyphen',
+      path: ['username'],
+    });
+  }
+};
 
-const updateBody = z.object({
-  email: z.string().email().max(255),
-  username: z.string().min(2).max(100).regex(/^[a-zA-Z0-9._-]+$/),
-  display_name: z.string().max(255).optional(),
-  is_active: z.boolean().optional(),
-  password: z.union([z.string().min(8).max(200), z.literal('')]).optional(),
-  role_ids: z.array(z.number().int().positive()).optional(),
-});
+const createBody = z
+  .object({
+    email: z.string().email().max(255),
+    username: z.string().min(2).max(100),
+    password: z.string().min(8).max(200),
+    display_name: z.string().max(255).optional(),
+    is_active: z.boolean().optional(),
+    role_ids: z.array(z.number().int().positive()).optional(),
+  })
+  .superRefine(usernameEmailRefine);
+
+const updateBody = z
+  .object({
+    email: z.string().email().max(255),
+    username: z.string().min(2).max(100),
+    display_name: z.string().max(255).optional(),
+    is_active: z.boolean().optional(),
+    password: z.union([z.string().min(8).max(200), z.literal('')]).optional(),
+    role_ids: z.array(z.number().int().positive()).optional(),
+  })
+  .superRefine(usernameEmailRefine);
 
 router.get(
   '/',

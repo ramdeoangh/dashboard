@@ -11,7 +11,9 @@ DROP TABLE IF EXISTS submenus;
 DROP TABLE IF EXISTS menus;
 DROP TABLE IF EXISTS permissions;
 DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS project_photos;
 DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS project_categories;
 DROP TABLE IF EXISTS locations;
 DROP TABLE IF EXISTS states;
 DROP TABLE IF EXISTS pages;
@@ -201,10 +203,24 @@ CREATE TABLE locations (
   CONSTRAINT fk_loc_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE project_categories (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(150) NOT NULL,
+  slug VARCHAR(100) NOT NULL,
+  status TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_by INT UNSIGNED NULL,
+  updated_by INT UNSIGNED NULL,
+  UNIQUE KEY uk_project_categories_slug (slug),
+  CONSTRAINT fk_pc_created_by FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT fk_pc_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE projects (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   project_name VARCHAR(255) NOT NULL,
-  procurement_name VARCHAR(255) NOT NULL,
+  procurement_name VARCHAR(255) NOT NULL DEFAULT '',
   address TEXT NOT NULL,
   beneficiary_details TEXT NULL,
   description TEXT NULL,
@@ -212,7 +228,9 @@ CREATE TABLE projects (
   pincode VARCHAR(20) NOT NULL DEFAULT '',
   procurement_type VARCHAR(150) NOT NULL DEFAULT '',
   contact_number VARCHAR(50) NOT NULL DEFAULT '',
-  duration_completion VARCHAR(100) NOT NULL DEFAULT '',
+  start_date DATE NULL,
+  end_date DATE NULL,
+  start_year SMALLINT UNSIGNED NULL COMMENT 'Year of start_date; set on write from start_date',
   old_photo_path VARCHAR(500) NULL,
   new_photo_path VARCHAR(500) NULL,
   workflow_status VARCHAR(32) NOT NULL DEFAULT 'in_progress' COMMENT 'in_progress, completed, blocked',
@@ -222,6 +240,7 @@ CREATE TABLE projects (
   approval_comment TEXT NULL,
   approved_by INT UNSIGNED NULL,
   approved_at TIMESTAMP NULL DEFAULT NULL,
+  category_id INT UNSIGNED NOT NULL,
   state_id INT UNSIGNED NOT NULL,
   location_id INT UNSIGNED NOT NULL,
   status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 active, 0 soft-deleted',
@@ -229,6 +248,7 @@ CREATE TABLE projects (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   created_by INT UNSIGNED NULL,
   updated_by INT UNSIGNED NULL,
+  CONSTRAINT fk_projects_category FOREIGN KEY (category_id) REFERENCES project_categories (id),
   CONSTRAINT fk_projects_state FOREIGN KEY (state_id) REFERENCES states (id),
   CONSTRAINT fk_projects_location FOREIGN KEY (location_id) REFERENCES locations (id),
   CONSTRAINT fk_projects_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
@@ -236,7 +256,26 @@ CREATE TABLE projects (
   CONSTRAINT fk_projects_approved_by FOREIGN KEY (approved_by) REFERENCES users (id) ON DELETE SET NULL,
   KEY idx_projects_state_loc (state_id, location_id),
   KEY idx_projects_status (status),
-  KEY idx_projects_submitted (is_submitted, is_approved)
+  KEY idx_projects_submitted (is_submitted, is_approved),
+  KEY idx_projects_category (category_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE project_photos (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  project_id INT UNSIGNED NOT NULL,
+  kind VARCHAR(16) NOT NULL COMMENT 'before or after',
+  file_path VARCHAR(500) NOT NULL,
+  original_name VARCHAR(255) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  status TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_by INT UNSIGNED NULL,
+  updated_by INT UNSIGNED NULL,
+  KEY idx_pp_project_kind (project_id, kind, sort_order),
+  CONSTRAINT fk_pp_project FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE,
+  CONSTRAINT fk_pp_created_by FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
+  CONSTRAINT fk_pp_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE refresh_tokens (

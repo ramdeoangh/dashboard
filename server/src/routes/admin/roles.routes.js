@@ -4,6 +4,7 @@ import { requireAuth, requirePermission } from '../../middleware/auth.js';
 import { asyncHandler, AppError } from '../../middleware/errorHandler.js';
 import { validateBody, validateParams } from '../../middleware/validate.js';
 import * as roleService from '../../services/roleService.js';
+import * as menuService from '../../services/menuService.js';
 
 const router = Router();
 router.use(requireAuth);
@@ -14,10 +15,16 @@ const roleBody = z.object({
   name: z.string().min(1).max(100),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9_]+$/),
   description: z.string().max(500).nullable().optional(),
+  is_active: z.boolean(),
 });
 
 const permBody = z.object({
   permission_ids: z.array(z.number().int().positive()),
+});
+
+const menuAccessBody = z.object({
+  menuIds: z.array(z.number().int().positive()),
+  submenuIds: z.array(z.number().int().positive()),
 });
 
 router.get(
@@ -35,6 +42,32 @@ router.get(
   asyncHandler(async (req, res) => {
     const data = await roleService.listRoles();
     res.json({ success: true, data });
+  })
+);
+
+router.get(
+  '/:id/menu-access',
+  requirePermission('roles.view'),
+  validateParams(idParam),
+  asyncHandler(async (req, res) => {
+    const existing = await roleService.getRoleById(req.validated.params.id);
+    if (!existing) throw new AppError(404, 'Role not found');
+    const data = await menuService.getRoleMenuAccess(req.validated.params.id);
+    res.json({ success: true, data });
+  })
+);
+
+router.put(
+  '/:id/menu-access',
+  requirePermission('roles.edit'),
+  validateParams(idParam),
+  validateBody(menuAccessBody),
+  asyncHandler(async (req, res) => {
+    const id = req.validated.params.id;
+    const existing = await roleService.getRoleById(id);
+    if (!existing) throw new AppError(404, 'Role not found');
+    await menuService.setRoleMenuAccess(id, req.validated.body);
+    res.json({ success: true });
   })
 );
 

@@ -12,11 +12,11 @@ export default function KpiStrip({ items }) {
       <style>{`
         .kpi-strip {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
           gap: 10px;
           padding: 14px 20px;
           background: var(--navy-dark);
-          border-radius: 0 0 var(--radius) var(--radius);
+          border-radius: 0;
         }
         .kpi-card {
           background: rgba(255,255,255,0.07);

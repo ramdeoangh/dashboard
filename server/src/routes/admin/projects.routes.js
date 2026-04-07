@@ -12,34 +12,59 @@ router.use(requireAuth);
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 
-const step1Body = z.object({
-  project_name: z.string().min(1).max(255),
-  procurement_name: z.string().min(1).max(255),
-  address: z.string().min(1).max(5000),
-  beneficiary_details: z.string().max(10000).optional().nullable(),
-  description: z.string().max(10000).optional().nullable(),
-  city: z.string().max(150).optional(),
-  pincode: z.string().max(20).optional(),
-  procurement_type: z.string().max(150).optional(),
-  contact_number: z.string().max(50).optional(),
-  duration_completion: z.string().max(100).optional(),
-  state_id: z.number().int().positive(),
-  location_id: z.number().int().positive(),
+const photoIdParam = z.object({
+  id: z.coerce.number().int().positive(),
+  photoId: z.coerce.number().int().positive(),
 });
+
+const indianMobile = z
+  .string()
+  .transform((s) => s.replace(/\s/g, '').replace(/^\+91/, ''))
+  .refine((s) => /^[6-9]\d{9}$/.test(s), 'Invalid Indian mobile number (10 digits starting 6-9)');
+
+const indianPin = z
+  .string()
+  .refine((s) => /^[1-9]\d{5}$/.test(String(s).trim()), 'Invalid PIN code (6 digits)');
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD');
+
+const step1Body = z
+  .object({
+    project_name: z.string().min(1).max(255),
+    procurement_name: z.string().max(255).default(''),
+    address: z.string().min(1).max(5000),
+    beneficiary_details: z.string().min(1).max(10000),
+    description: z.string().min(1).max(10000),
+    city: z.string().min(1).max(150),
+    pincode: indianPin,
+    procurement_type: z.string().min(1).max(150),
+    contact_number: indianMobile,
+    start_date: isoDate,
+    end_date: isoDate,
+    state_id: z.number().int().positive(),
+    location_id: z.number().int().positive(),
+    category_id: z.number().int().positive(),
+  })
+  .refine((d) => d.end_date >= d.start_date, {
+    message: 'End date must be on or after start date',
+    path: ['end_date'],
+  });
 
 const patchBody = z.object({
   project_name: z.string().min(1).max(255).optional(),
-  procurement_name: z.string().min(1).max(255).optional(),
+  procurement_name: z.string().max(255).optional(),
   address: z.string().min(1).max(5000).optional(),
-  beneficiary_details: z.string().max(10000).optional().nullable(),
-  description: z.string().max(10000).optional().nullable(),
-  city: z.string().max(150).optional(),
+  beneficiary_details: z.string().min(1).max(10000).optional(),
+  description: z.string().min(1).max(10000).optional(),
+  city: z.string().min(1).max(150).optional(),
   pincode: z.string().max(20).optional(),
   procurement_type: z.string().max(150).optional(),
   contact_number: z.string().max(50).optional(),
-  duration_completion: z.string().max(100).optional(),
+  start_date: isoDate.optional(),
+  end_date: isoDate.optional(),
   state_id: z.number().int().positive().optional(),
   location_id: z.number().int().positive().optional(),
+  category_id: z.number().int().positive().optional(),
   workflow_status: z.enum(['in_progress', 'completed', 'blocked']).optional(),
   block_reason: z.string().max(10000).optional().nullable(),
 });
@@ -107,11 +132,81 @@ router.get(
 );
 
 router.get(
-  '/:id',
+  '/:id/photos',
   requirePermission('projects.view'),
   validateParams(idParam),
   asyncHandler(async (req, res) => {
     const row = await projectService.getProjectById(req.validated.params.id);
+    if (!row) throw new AppError(404, 'Project not found');
+    const data = await projectService.listProjectPhotos(req.validated.params.id);
+    res.json({ success: true, data });
+  })
+);
+
+router.delete(
+  '/:id/photos/:photoId',
+  requirePermission('projects.edit'),
+  validateParams(photoIdParam),
+  asyncHandler(async (req, res) => {
+    const { id, photoId } = req.validated.params;
+    const p = await projectService.getProjectById(id);
+    if (!p) throw new AppError(404, 'Project not found');
+    const ok = await projectService.deleteProjectPhoto(id, photoId, req.auth.userId);
+    if (!ok) throw new AppError(404, 'Photo not found');
+    res.json({ success: true });
+  })
+);
+
+router.post(
+  '/:id/photos',
+  requirePermission('projects.edit'),
+  validateParams(idParam),
+  asyncHandler(attachProjectPhotoFolder),
+  asyncHandler((req, res, next) => {
+    upload.fields([
+      { name: 'beforePhotos', maxCount: 12 },
+      { name: 'afterPhotos', maxCount: 12 },
+    ])(req, res, (err) => {
+      if (err) return next(err);
+      next();
+    });
+  }),
+  asyncHandler(async (req, res) => {
+    const id = req.validated.params.id;
+    const existing = await projectService.getProjectById(id);
+    if (!existing) throw new AppError(404, 'Project not found');
+    if (existing.status === 0) throw new AppError(400, 'Project is deleted');
+    const files = req.files || {};
+    const before = files.beforePhotos || [];
+    const after = files.afterPhotos || [];
+    if (!before.length && !after.length) {
+      return res.status(400).json({ success: false, error: 'No image files provided' });
+    }
+    if (before.length) {
+      const entries = before.map((f) => ({
+        file_path: relativeFromMulter(f),
+        original_name: f.originalname,
+      }));
+      await projectService.addProjectPhotoRows(id, 'before', entries, req.auth.userId);
+    }
+    if (after.length) {
+      const entries = after.map((f) => ({
+        file_path: relativeFromMulter(f),
+        original_name: f.originalname,
+      }));
+      await projectService.addProjectPhotoRows(id, 'after', entries, req.auth.userId);
+    }
+    const row = await projectService.getProjectById(id);
+    res.json({ success: true, data: row });
+  })
+);
+
+router.get(
+  '/:id',
+  requirePermission('projects.view'),
+  validateParams(idParam),
+  asyncHandler(async (req, res) => {
+    const row = await projectService.getProjectById(req.validated.params.id, { withPhotos: true });
     if (!row) throw new AppError(404, 'Project not found');
     res.json({ success: true, data: row });
   })

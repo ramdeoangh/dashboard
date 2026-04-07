@@ -6,9 +6,17 @@ const PROTECTED_SLUGS = new Set(['super_admin']);
 export async function listRoles() {
   const pool = getPool();
   const [rows] = await pool.execute(
-    `SELECT id, name, slug, description, created_at, updated_at FROM roles ORDER BY id`
+    `SELECT id, name, slug, description, status, created_at, updated_at FROM roles ORDER BY id`
   );
-  return rows;
+  return rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    slug: r.slug,
+    description: r.description,
+    isActive: Boolean(r.status),
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  }));
 }
 
 export async function listPermissions() {
@@ -27,32 +35,45 @@ export async function getRoleById(id) {
     `SELECT permission_id FROM role_permissions WHERE role_id = ?`,
     [id]
   );
+  const row = rows[0];
   return {
-    ...rows[0],
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    isActive: Boolean(row.status),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
     permissionIds: permRows.map((r) => r.permission_id),
   };
 }
 
-export async function createRole({ name, slug, description }) {
+export async function createRole({ name, slug, description, is_active }) {
   const pool = getPool();
+  const status = is_active === false ? 0 : 1;
   const [r] = await pool.execute(
-    `INSERT INTO roles (name, slug, description) VALUES (?, ?, ?)`,
-    [name, slug, description || null]
+    `INSERT INTO roles (name, slug, description, status) VALUES (?, ?, ?, ?)`,
+    [name, slug, description || null, status]
   );
   return r.insertId;
 }
 
-export async function updateRole(id, { name, slug, description }) {
+export async function updateRole(id, { name, slug, description, is_active }) {
   const pool = getPool();
   const [rows] = await pool.execute(`SELECT slug FROM roles WHERE id = ?`, [id]);
   if (!rows.length) return false;
   if (PROTECTED_SLUGS.has(rows[0].slug) && slug !== rows[0].slug) {
     throw new AppError(400, 'Cannot change slug of protected role');
   }
-  await pool.execute(`UPDATE roles SET name = ?, slug = ?, description = ? WHERE id = ?`, [
+  if (PROTECTED_SLUGS.has(rows[0].slug) && is_active === false) {
+    throw new AppError(400, 'Cannot deactivate protected role');
+  }
+  const status = is_active === false ? 0 : 1;
+  await pool.execute(`UPDATE roles SET name = ?, slug = ?, description = ?, status = ? WHERE id = ?`, [
     name,
     slug,
     description || null,
+    status,
     id,
   ]);
   return true;

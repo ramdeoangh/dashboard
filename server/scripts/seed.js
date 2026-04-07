@@ -23,7 +23,9 @@ async function main() {
   const database = process.env.DATABASE_NAME || 'project_reporting';
 
   const sqlPath = path.join(__dirname, '..', 'db', 'seed.sql');
+  const statesPath = path.join(__dirname, '..', 'db', 'seed_indian_states.sql');
   const sql = fs.readFileSync(sqlPath, 'utf8');
+  const statesSql = fs.readFileSync(statesPath, 'utf8');
 
   const conn = await mysql.createConnection({
     host,
@@ -35,6 +37,7 @@ async function main() {
   });
 
   await conn.query(sql);
+  await conn.query(statesSql);
 
   const [rows] = await conn.execute(
     'SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1',

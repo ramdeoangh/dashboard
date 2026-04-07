@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink, Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import ProfileMenu from '../components/ProfileMenu.jsx';
 
 function menuIcon(iconSlug) {
   const map = {
@@ -15,13 +16,21 @@ function menuIcon(iconSlug) {
 }
 
 function NavSection({ menu }) {
-  const [open, setOpen] = useState(true);
   const hasSubs = menu.submenus?.length > 0;
   const icon = menuIcon(menu.icon);
   const location = useLocation();
 
+  const childActive =
+    hasSubs &&
+    menu.submenus.some((s) => location.pathname === s.path || location.pathname.startsWith(`${s.path}/`));
+
+  const [open, setOpen] = useState(Boolean(childActive));
+
+  useEffect(() => {
+    setOpen(Boolean(childActive));
+  }, [location.pathname, menu.id, childActive]);
+
   if (hasSubs) {
-    const childActive = menu.submenus.some((s) => location.pathname === s.path || location.pathname.startsWith(`${s.path}/`));
     return (
       <div className="nav-section">
         <button
@@ -86,9 +95,6 @@ export default function AdminLayout() {
             </span>
           </strong>
           <div className="side-head-actions">
-            <Link to="/" className="icon-link" aria-label="Open portal" title="Portal">
-              <span aria-hidden>🌐</span>
-            </Link>
             <button type="button" className="icon-btn" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle menu">
               ☰
             </button>
@@ -116,10 +122,34 @@ export default function AdminLayout() {
       </aside>
       <div className="admin-body">
         <header className="admin-top">
-          <span className="muted">{user?.displayName || user?.username}</span>
-          <button type="button" className="btn btn-ghost" onClick={() => logout()}>
-            Sign out
-          </button>
+          <div className="admin-top-start">
+                     <a
+              href={`${typeof window !== 'undefined' ? window.location.origin : ''}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="icon-link admin-top-bar-btn"
+              aria-label="Open reporting portal in new tab"
+              title="Open portal (new tab)"
+            >
+              <span className="admin-globe-svg" aria-hidden>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                </svg>
+              </span>
+            </a>
+          </div>
+          <div className="admin-top-end">
+            <ProfileMenu prefix="Admin" onSignOut={() => logout()} variant="admin" />
+          </div>
         </header>
         <div className="admin-content">
           <Outlet />
@@ -190,9 +220,19 @@ export default function AdminLayout() {
         .admin-side.collapsed .side-foot a { justify-content: center; padding: 8px 0; }
         .admin-body { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .admin-top {
-          display: flex; justify-content: flex-end; align-items: center; gap: 12px;
+          display: flex; justify-content: space-between; align-items: center; gap: 12px;
           padding: 12px 20px; background: var(--white); border-bottom: 1px solid var(--border);
         }
+        .admin-top-start { display: flex; align-items: center; gap: 4px; }
+        .admin-top-end { display: flex; align-items: center; gap: 12px; }
+        .admin-top-bar-btn {
+          color: var(--navy); font-size: 20px; padding: 6px 8px; border-radius: 6px;
+          background: transparent; border: none; cursor: pointer;
+          display: inline-flex; align-items: center; justify-content: center;
+          text-decoration: none;
+        }
+        .admin-top-bar-btn:hover { background: var(--gray-light); }
+        .admin-globe-svg { display: flex; align-items: center; justify-content: center; color: var(--navy-mid); }
         .admin-content { padding: 20px; flex: 1; background: var(--off-white); }
         .chev { opacity: 0.7; font-size: 14px; flex-shrink: 0; }
       `}</style>
