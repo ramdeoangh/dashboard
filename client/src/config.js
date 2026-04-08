@@ -1,30 +1,33 @@
 /**
- * Build-time config from Vite env (VITE_*). See client/.env.example.
- * If a variable is missing, empty, or whitespace-only, the hardcoded default is used.
+ * API and uploads base URLs — single source for the app (no .env required for production).
+ * Change these constants when you deploy (e.g. same-origin `/api` or your public API host).
  */
 
-const DEFAULT_API_BASE_URL = '/api';
-const DEFAULT_UPLOADS_BASE_URL = '/uploads';
+//local
+// const API_BASE_URL = 'http://localhost:4000/api';
+// const UPLOADS_BASE_URL = 'http://localhost:4000/uploads';
+
+//production
+const API_BASE_URL = 'https://api.y4d.ngo/api';
+const UPLOADS_BASE_URL = 'https://api.y4d.ngo/uploads';
 
 function normalizeApiBase(url) {
-  if (url == null) return DEFAULT_API_BASE_URL;
   const u = String(url).trim();
-  if (u === '') return DEFAULT_API_BASE_URL;
-  return u.replace(/\/+$/, '') || DEFAULT_API_BASE_URL;
+  if (u === '') return '/api';
+  return u.replace(/\/+$/, '') || '/api';
 }
 
 function normalizeUploadsBase(url) {
-  if (url == null) return DEFAULT_UPLOADS_BASE_URL;
   const u = String(url).trim();
-  if (u === '') return DEFAULT_UPLOADS_BASE_URL;
-  return u.replace(/\/+$/, '') || DEFAULT_UPLOADS_BASE_URL;
+  if (u === '') return '/uploads';
+  return u.replace(/\/+$/, '') || '/uploads';
 }
 
-/** Axios baseURL (include `/api` path segment). */
-export const apiBaseURL = normalizeApiBase(import.meta.env.VITE_API_BASE_URL);
+/** Axios baseURL (include `/api` path when using path-style mounting). */
+export const apiBaseURL = normalizeApiBase(API_BASE_URL);
 
 /** Public URL prefix for uploaded static files (no trailing slash). */
-export const uploadsBaseURL = normalizeUploadsBase(import.meta.env.VITE_UPLOADS_BASE_URL);
+export const uploadsBaseURL = normalizeUploadsBase(UPLOADS_BASE_URL);
 
 /**
  * @param {string | null | undefined} relativePath — path as stored (may include leading slashes)

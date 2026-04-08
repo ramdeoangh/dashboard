@@ -348,7 +348,7 @@ export function buildOpenApiSpec() {
       title: 'Project Reporting API',
       version: '1.0.0',
       description:
-        '**Health** (`GET /api/health`, `GET /api/health/db`) is public. In **production**, opening **/api/docs** or **/api/openapi.json** requires `Authorization: Bearer <accessToken>` from **POST /api/auth/login**, or header **X-API-Docs-Token** if `SWAGGER_DOCS_TOKEN` is set in the server environment. Development keeps docs open without that gate. For protected JSON routes, authorize with Bearer after login.',
+        '**Health** (`GET /api/health`, `GET /api/health/db`) is public. In **production**, docs require auth: **`/api/docs/?docs_token=<SWAGGER_DOCS_TOKEN>`** once (sets an httpOnly cookie for 8h), or **Authorization: Bearer**, or **X-API-Docs-Token**. Development keeps docs open. Use **Authorize** in Swagger for JSON APIs after login.',
     },
     tags: [
       { name: 'Health', description: 'Liveness and database connectivity (no auth)' },

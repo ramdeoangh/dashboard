@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node scripts/build-dist.js",
     "start": "node src/server.js",
     "dev": "nodemon",
     "db:migrate": "node scripts/migrate.js",
@@ -23,7 +24,6 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.12.0",
-    "project-reporting-dashboard": "file:..",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.0.5",
     "zod": "^3.24.2"

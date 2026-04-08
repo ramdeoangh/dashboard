@@ -5,6 +5,7 @@ server/node_modules/
 
 # Build output
 client/dist/
+server/dist/
 *.tsbuildinfo
 
 # Environment and secrets (any directory; keep *example* templates tracked)

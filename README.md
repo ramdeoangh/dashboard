@@ -51,7 +51,7 @@ Edit **`server/.env`** and set:
 - **MySQL:** `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` (e.g. `project_dashboard`)
 - **CORS:** `CLIENT_ORIGIN` — one origin or **comma-separated** list (e.g. `https://dashboard.y4dinfo.org,http://localhost:5173`). Values are normalized (trailing slashes ignored).
 - **Swagger servers (optional):** `PUBLIC_API_URL` — first entry in Swagger “Servers”; omit to rely on same-origin `/`.
-- **Production docs (optional):** `SWAGGER_DOCS_TOKEN` — if set, `GET /api/docs` and `GET /api/openapi.json` also accept header `X-API-Docs-Token` (otherwise use `Authorization: Bearer` after login). In `NODE_ENV=development`, docs stay open without this gate.
+- **Production docs (optional):** `SWAGGER_DOCS_TOKEN` — open **`/api/docs/?docs_token=<token>`** once (httpOnly cookie, 8h), or send **`X-API-Docs-Token`**, or **`Authorization: Bearer`**. In `NODE_ENV=development`, docs stay open without this gate.
 - **JWT:** `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` — use long random strings (required for production)
 - **Audit (optional):** `LOG_HTTP_TO_DB` / `LOG_ERRORS_TO_DB` — set to `false` to turn off writing API/error rows to MySQL (`application_logs`)
 
@@ -81,7 +81,7 @@ npm run dev
 This starts:
 
 - **API:** http://localhost:4000 (or the `PORT` in `server/.env`)
-- **Client:** http://localhost:5173 (Vite; proxies `/api` and `/uploads` to the API)
+- **Client:** http://localhost:5173 (Vite). API URLs are **`client/src/config.js`** constants (default: `http://localhost:4000/api`) — no `.env` required; no proxy in `vite.config.js`.
 
 Open **http://localhost:5173** in the browser.
 
@@ -93,8 +93,8 @@ With the API running, base URL is **`http://localhost:{PORT}`** (default **`http
 |------|-----|--------|
 | **Health (process)** | `GET /api/health` | e.g. `http://localhost:4000/api/health` — `{ "ok": true }`. No auth. |
 | **Health (database)** | `GET /api/health/db` | Runs `SELECT 1` against MySQL. `{ "ok": true, "database": "connected" }` or **503** if DB is down. No auth. |
-| **Swagger UI** | `/api/docs` | Interactive docs. **Development:** open freely. **Production:** requires `Authorization: Bearer <accessToken>` (e.g. browser extension adding the header) or `X-API-Docs-Token` if `SWAGGER_DOCS_TOKEN` is set. Health routes above stay public. |
-| **OpenAPI JSON** | `/api/openapi.json` | Same protection as Swagger UI in production. |
+| **Swagger UI** | `/api/docs` | **Development:** open freely. **Production:** with `SWAGGER_DOCS_TOKEN` set, open **`/api/docs/?docs_token=<that token>`** once (cookie for 8h); or use `X-API-Docs-Token` / `Authorization: Bearer`. |
+| **OpenAPI JSON** | `/api/openapi.json` | Same as Swagger (cookie from the URL above, or headers). |
 | **Servers in Swagger** | (dropdown) | If `PUBLIC_API_URL` is set, it appears as a server entry; **Same origin** (`/`) is always listed for Try it out on the API host. |
 
 In production, replace the host with your deployed API origin (same paths).
@@ -111,11 +111,26 @@ cd client && npm run dev
 
 ### 5. Production build (client)
 
+Edit **`client/src/config.js`** (`API_BASE_URL`, `UPLOADS_BASE_URL`) for your deploy host, then build — no production `.env` needed. Examples:
+
+- Same site + reverse proxy: `'https://yoursite.org/api'` and `'https://yoursite.org/uploads'`
+- Local / default: `http://localhost:4000/api` and `http://localhost:4000/uploads`
+
 ```bash
 npm run build:client
 ```
 
-Output: `client/dist/`. Serve that folder with your static host and point `/api` and `/uploads` to the Node server (see [`docs/client/README.md`](docs/client/README.md)).
+Output: `client/dist/`. Serve that folder; match `.htaccess` / proxy to the URLs you set in `config.js`.
+
+### 6. Server production bundle (deploy folder)
+
+From **`server/`** (or `npm run build:server` from the repo root):
+
+```bash
+cd server && npm run build
+```
+
+This creates **`server/dist/`** with `src/`, `scripts/`, `db/`, `package.json`, `package-lock.json`, `.env.example`, an empty **`uploads/`** folder, and **production-only `node_modules`**. Upload the **contents** of `dist/` to your host, add **`.env`**, then start with **`npm start`** (or your panel’s start command). Re-run **`npm run build`** after code or dependency changes.
 
 ---
 
@@ -166,6 +181,9 @@ Login sends the password as **plain JSON** over HTTP. That is normal: **encrypti
 | Command | Where | Purpose |
 |---------|--------|---------|
 | `npm run install:all` | repo root | Install server + client deps |
+| `npm run install:server` | repo root | Install **server/** deps only (e.g. Hostinger build step) |
+| `npm run build:server` | repo root | Build **`server/dist/`** — deployable API (sources, `db/`, `scripts/`, prod `node_modules`) |
+| `npm run build` | `server/` | Same as `build:server` from repo root |
 | `npm run dev` | repo root | API + Vite together |
 | `npm run db:migrate` | `server/` | Apply MySQL schema |
 | `npm run db:seed` | `server/` | Seed data + default admin |
@@ -174,7 +192,7 @@ Login sends the password as **plain JSON** over HTTP. That is normal: **encrypti
 | `npm run db:patch:logs` | `server/` | Add `application_logs` table on existing DB (DB audit) |
 | `npm start` | `server/` | Start API (no auto-reload) |
 | `npm run dev` | `server/` | API with **nodemon** (reload on code / `.env` changes) |
-| `npm run build` | `client/` | Production frontend build |
+| `npm run build` | `client/` | Production frontend → `client/dist/` |
 
 ---
 
@@ -188,6 +206,7 @@ dashboard/
     client/README.md        # Frontend details
     server/README.md        # API & database details
   server/                   # Express API, schema, seeds, .env
+  server/dist/              # `npm run build` in server/ — upload this for production API (gitignored)
   client/                   # Vite + React SPA
 ```
 
