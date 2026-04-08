@@ -1,0 +1,35 @@
+# Hostinger / Apache — SPA (Vite/React) from `dist/` upload to public_html (or subfolder).
+# This file is copied to `dist/` on `npm run build` because it lives in `public/`.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # If the app lives in a subdirectory, set it explicitly, e.g. RewriteBase /myapp/
+  RewriteBase /
+
+  # Serve real files and folders as-is (JS/CSS, index.html, uploads if proxied here, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Client-side routes → index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Optional: short cache for hashed Vite assets (filenames change each build)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|mjs|css|woff2?|ttf|eot|ico|svg|png|jpg|jpeg|gif|webp)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "^index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Optional: compress text responses when mod_deflate is enabled
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript application/json image/svg+xml
+</IfModule>
+
+# Disable directory listing
+Options -Indexes

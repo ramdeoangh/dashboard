@@ -10,16 +10,26 @@ import { UPLOAD_PUBLIC_PREFIX } from './utils/uploadPath.js';
 import authRoutes from './routes/auth.routes.js';
 import portalRoutes from './routes/portal.routes.js';
 import adminRoutes from './routes/admin/index.js';
+import { mountSwagger } from './swaggerSetup.js';
 
 const app = express();
 
 app.set('trust proxy', 1);
 
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  })
-);
+const helmetDefault = helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+});
+const helmetDocs = helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+});
+
+app.use((req, res, next) => {
+  if (req.path === '/api/openapi.json' || req.path.startsWith('/api/docs')) {
+    return helmetDocs(req, res, next);
+  }
+  helmetDefault(req, res, next);
+});
 
 app.use(
   cors({
@@ -48,6 +58,8 @@ app.use(
 app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
+
+mountSwagger(app);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/portal', portalRoutes);

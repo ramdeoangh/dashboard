@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { apiBaseURL } from '../config.js';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseURL,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -20,7 +21,7 @@ export function getAccessToken() {
 export async function refreshAccessToken() {
   if (!refreshPromise) {
     refreshPromise = axios
-      .post('/api/auth/refresh', {}, { withCredentials: true })
+      .post(`${apiBaseURL}/auth/refresh`, {}, { withCredentials: true })
       .then((res) => {
         const t = res.data?.data?.accessToken;
         if (t) setAccessToken(t);

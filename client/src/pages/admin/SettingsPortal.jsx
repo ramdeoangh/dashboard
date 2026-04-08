@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client.js';
+import { uploadsUrl } from '../../config.js';
 import Spinner from '../../components/Spinner.jsx';
 
 export default function SettingsPortal() {
@@ -55,7 +56,7 @@ export default function SettingsPortal() {
 
   if (loading) return <Spinner />;
 
-  const logoUrl = s['portal.logo_path'] ? `/uploads/${String(s['portal.logo_path']).replace(/^\/+/, '')}` : null;
+  const logoUrl = uploadsUrl(s['portal.logo_path']);
 
   return (
     <div>
