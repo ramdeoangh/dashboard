@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../api/client.js';
+import { mediaUrlFromApi } from '../config.js';
 
 function DetailRow({ label, children }) {
   if (children == null || children === '') return null;
@@ -19,22 +20,28 @@ function normKind(p) {
 
 function mergeLegacyPhotos(project, apiList) {
   const list = Array.isArray(apiList) ? apiList : [];
-  const before = list.filter((p) => p?.url && normKind(p) === 'before');
-  const after = list.filter((p) => p?.url && normKind(p) === 'after');
+  const before = list
+    .filter((p) => p?.url && normKind(p) === 'before')
+    .map((p) => ({ ...p, url: mediaUrlFromApi(p.url) }));
+  const after = list
+    .filter((p) => p?.url && normKind(p) === 'after')
+    .map((p) => ({ ...p, url: mediaUrlFromApi(p.url) }));
   const seenB = new Set(before.map((p) => p.url));
   const seenA = new Set(after.map((p) => p.url));
-  if (project.oldPhotoUrl && !seenB.has(project.oldPhotoUrl)) {
+  const legacyBefore = mediaUrlFromApi(project.oldPhotoUrl);
+  const legacyAfter = mediaUrlFromApi(project.newPhotoUrl);
+  if (legacyBefore && !seenB.has(legacyBefore)) {
     before.push({
       id: 'legacy-before',
-      url: project.oldPhotoUrl,
+      url: legacyBefore,
       originalName: null,
       kind: 'before',
     });
   }
-  if (project.newPhotoUrl && !seenA.has(project.newPhotoUrl)) {
+  if (legacyAfter && !seenA.has(legacyAfter)) {
     after.push({
       id: 'legacy-after',
-      url: project.newPhotoUrl,
+      url: legacyAfter,
       originalName: null,
       kind: 'after',
     });

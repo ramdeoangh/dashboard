@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { asyncHandler, AppError } from '../middleware/errorHandler.js';
 import { validateQuery, validateParams } from '../middleware/validate.js';
 import * as settingsService from '../services/settingsService.js';
@@ -11,8 +10,6 @@ import * as statsService from '../services/statsService.js';
 import { toPublicUrl } from '../utils/uploadPath.js';
 
 const router = Router();
-router.use(requireAuth);
-router.use(requirePermission('projects.view'));
 
 router.get(
   '/bootstrap',

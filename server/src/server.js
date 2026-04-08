@@ -3,7 +3,12 @@ import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 
 const server = app.listen(env.port, () => {
-  logger.info(`API listening on port ${env.port}`, { env: env.nodeEnv });
+  logger.info(`API listening on port ${env.port}`, {
+    env: env.nodeEnv,
+    refreshCookieSameSite: env.refreshCookieSameSite,
+    refreshCookieSecure: env.refreshCookieSecure,
+    refreshTokenAllowBodyAuth: env.refreshTokenAllowBodyAuth,
+  });
 });
 
 process.on('unhandledRejection', (reason) => {

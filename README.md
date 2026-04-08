@@ -53,6 +53,7 @@ Edit **`server/.env`** and set:
 - **Swagger servers (optional):** `PUBLIC_API_URL` — first entry in Swagger “Servers”; omit to rely on same-origin `/`.
 - **Production docs (optional):** `SWAGGER_DOCS_TOKEN` — open **`/api/docs/?docs_token=<token>`** once (httpOnly cookie, 8h), or send **`X-API-Docs-Token`**, or **`Authorization: Bearer`**. In `NODE_ENV=development`, docs stay open without this gate.
 - **JWT:** `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` — use long random strings (required for production)
+- **Cross-origin SPA** (e.g. UI at `https://dashboard.example.com`, API at `https://api.example.com`): the API sets **`SameSite=None; Secure`** on the refresh cookie when hosts differ or in production. **Browsers may still block that cookie** (third-party). When **`PUBLIC_API_URL`’s host ≠ the first `CLIENT_ORIGIN` host**, the server also returns **`refreshToken` in the login JSON** and accepts **`refreshToken` in the body** of **`POST /auth/refresh`** and **`POST /auth/logout`**; the client stores it in **`sessionStorage`** (XSS-sensitive — prefer same-origin `/api` when you can). Set **`ALLOW_REFRESH_TOKEN_BODY=true`** to force that mode even when hosts match.
 - **Audit (optional):** `LOG_HTTP_TO_DB` / `LOG_ERRORS_TO_DB` — set to `false` to turn off writing API/error rows to MySQL (`application_logs`)
 
 If the database was created **before** audit logging existed, run once: `cd server && npm run db:patch:logs`.

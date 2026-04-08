@@ -1,5 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import api, { refreshAccessToken, setAccessToken } from '../api/client.js';
+import api, {
+  clearStoredRefreshToken,
+  getStoredRefreshToken,
+  refreshAccessToken,
+  setAccessToken,
+  setStoredRefreshToken,
+} from '../api/client.js';
 
 const AuthContext = createContext(null);
 
@@ -13,6 +19,8 @@ export function AuthProvider({ children }) {
     setUser(data.data.user);
   }, []);
 
+  // Try to restore session from httpOnly refresh cookie (POST /auth/refresh). Runs on every full load,
+  // including /login — 401 there simply means "not logged in yet"; not a custom-header issue.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -29,6 +37,7 @@ export function AuthProvider({ children }) {
       } catch {
         setAccessToken(null);
         setUser(null);
+        clearStoredRefreshToken();
       } finally {
         if (!cancelled) setReady(true);
       }
@@ -40,7 +49,8 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     const { data } = await api.post('/auth/login', { username, password });
-    const { accessToken, user: u } = data.data;
+    const { accessToken, user: u, refreshToken } = data.data;
+    if (refreshToken) setStoredRefreshToken(refreshToken);
     setAccessToken(accessToken);
     setUser(u);
     return u;
@@ -48,8 +58,10 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      const rt = getStoredRefreshToken();
+      await api.post('/auth/logout', rt ? { refreshToken: rt } : {});
     } finally {
+      clearStoredRefreshToken();
       setAccessToken(null);
       setUser(null);
     }

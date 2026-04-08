@@ -38,6 +38,50 @@ const clientOrigins = parseClientOrigins(
   process.env.CLIENT_ORIGIN || 'http://localhost:5173'
 );
 
+const REFRESH_SAMESITE = new Set(['strict', 'lax', 'none']);
+
+/**
+ * True when the browser UI (first CLIENT_ORIGIN) is on a different host than PUBLIC_API_URL.
+ * In that case the refresh cookie must be SameSite=None (+ Secure), even if NODE_ENV was
+ * accidentally left as "development" (e.g. a deployed .env overriding the host panel).
+ */
+function inferSpaOnDifferentHostThanApi() {
+  const apiRaw = process.env.PUBLIC_API_URL?.trim();
+  if (!apiRaw || clientOrigins.length === 0) return false;
+  try {
+    const apiUrl = apiRaw.includes('://') ? apiRaw : `https://${apiRaw}`;
+    const apiHost = new URL(apiUrl).hostname;
+    const clientHost = new URL(clientOrigins[0]).hostname;
+    return apiHost !== clientHost;
+  } catch {
+    return false;
+  }
+}
+
+function resolveRefreshCookieSameSite() {
+  const raw = (process.env.REFRESH_COOKIE_SAMESITE || '').toLowerCase();
+  if (REFRESH_SAMESITE.has(raw)) return raw;
+  if (inferSpaOnDifferentHostThanApi()) return 'none';
+  return (process.env.NODE_ENV || 'development') === 'production' ? 'none' : 'lax';
+}
+
+const refreshCookieSameSite = resolveRefreshCookieSameSite();
+const refreshCookieSecure =
+  refreshCookieSameSite === 'none' ? true : process.env.NODE_ENV === 'production';
+
+/**
+ * Return refreshToken in login JSON + accept body on refresh/logout when:
+ * - UI host ≠ PUBLIC_API_URL host (infer), or
+ * - ALLOW_REFRESH_TOKEN_BODY=true, or
+ * - production and PUBLIC_API_URL is unset (many hosts omit it; cookies are still third-party blocked).
+ */
+const refreshTokenAllowBodyAuth =
+  inferSpaOnDifferentHostThanApi() ||
+  process.env.ALLOW_REFRESH_TOKEN_BODY === 'true' ||
+  ((process.env.NODE_ENV || 'development') === 'production' &&
+    !(process.env.PUBLIC_API_URL || '').trim() &&
+    process.env.DISALLOW_REFRESH_TOKEN_BODY !== 'true');
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
@@ -50,6 +94,12 @@ export const env = {
   publicApiUrl: process.env.PUBLIC_API_URL?.trim().replace(/\/$/, '') || '',
   /** If set in production, Swagger accepts `X-API-Docs-Token` matching this value (JWT still works). */
   swaggerDocsToken: process.env.SWAGGER_DOCS_TOKEN?.trim() || '',
+  /** Refresh cookie SameSite: default production `none` for SPA on a different host than the API. */
+  refreshCookieSameSite,
+  /** `true` whenever SameSite is `none` (required) or in production otherwise. */
+  refreshCookieSecure,
+  /** Cross-host SPA: login includes refreshToken in JSON; refresh/logout accept body.refreshToken. */
+  refreshTokenAllowBodyAuth,
   db: {
     host: req('DATABASE_HOST', '127.0.0.1'),
     port: Number(process.env.DATABASE_PORT || 3306),

@@ -94,15 +94,15 @@ const pendingListQuery = z.object({
 
 const upload = createProjectImageUploader();
 
-async function attachProjectPhotoFolder(req, res, next) {
+async function attachProjectUploadContext(req, res, next) {
   try {
     const id = req.validated?.params?.id ?? Number(req.params.id);
-    const key = await projectService.getProjectPhotoFolderKey(id);
-    if (!key) {
+    const row = await projectService.getProjectById(id);
+    if (!row) {
       next(new AppError(404, 'Project not found'));
       return;
     }
-    req.projectPhotoFolderKey = key;
+    req.projectUploadId = id;
     next();
   } catch (e) {
     next(e);
@@ -157,11 +157,12 @@ router.delete(
   })
 );
 
+/** Multipart beforePhotos / afterPhotos — always appends; does not replace existing images. */
 router.post(
   '/:id/photos',
   requirePermission('projects.edit'),
   validateParams(idParam),
-  asyncHandler(attachProjectPhotoFolder),
+  asyncHandler(attachProjectUploadContext),
   asyncHandler((req, res, next) => {
     upload.fields([
       { name: 'beforePhotos', maxCount: 12 },
@@ -259,11 +260,12 @@ router.patch(
   })
 );
 
+/** Legacy: oldPhoto / newPhoto fields — each file appends to before/after album (same as POST). */
 router.put(
   '/:id/photos',
   requirePermission('projects.edit'),
   validateParams(idParam),
-  asyncHandler(attachProjectPhotoFolder),
+  asyncHandler(attachProjectUploadContext),
   asyncHandler((req, res, next) => {
     upload.fields([
       { name: 'oldPhoto', maxCount: 1 },

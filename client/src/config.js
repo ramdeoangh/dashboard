@@ -38,3 +38,21 @@ export function uploadsUrl(relativePath) {
   const p = String(relativePath).replace(/^\/+/, '');
   return `${uploadsBaseURL}/${p}`;
 }
+
+/**
+ * Turn API `url` fields into a browser-loadable href/src. Server may return absolute URLs
+ * (when PUBLIC_API_URL is set) or root-relative `/uploads/...` (cross-origin SPA needs the API host).
+ */
+export function mediaUrlFromApi(url) {
+  if (url == null || url === '') return null;
+  const u = String(url).trim();
+  if (/^https?:\/\//i.test(u)) return u;
+  if (u.startsWith('/')) {
+    try {
+      return new URL(u, apiBaseURL).href;
+    } catch {
+      return u;
+    }
+  }
+  return uploadsUrl(u);
+}

@@ -2,13 +2,6 @@ import { getPool } from '../config/database.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { safeUnlink, toPublicUrl } from '../utils/uploadPath.js';
 
-function sanitizeFolderSegment(s) {
-  return String(s || 'x')
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 80) || 'x';
-}
-
 function normalizePhotoKind(raw) {
   const k = cellStr(raw)
     .toLowerCase()
@@ -131,8 +124,9 @@ function mapRow(row) {
     newPhotoUrl: toPublicUrl(afterPath),
     workflowStatus: row.workflow_status,
     blockReason: row.block_reason,
-    isSubmitted: Boolean(row.is_submitted),
-    isApproved: Boolean(row.is_approved),
+    // MySQL may return 0/1 as numbers or strings; Boolean("0") is true in JS — use numeric check.
+    isSubmitted: row.is_submitted == 1,
+    isApproved: row.is_approved == 1,
     approvalComment: row.approval_comment,
     approvedBy: row.approved_by,
     approvedAt: row.approved_at,
@@ -302,14 +296,18 @@ async function syncLegacyPhotoColumns(projectId, updatedBy) {
   );
 }
 
+/**
+ * Append new album rows only — never replaces or removes existing active photos.
+ * Each batch is inserted after the current max sort_order for that project/kind (active rows only).
+ */
 export async function addProjectPhotoRows(projectId, kind, entries, userId) {
   if (!['before', 'after'].includes(kind)) throw new AppError(400, 'Invalid photo kind');
   const pool = getPool();
   const [maxRow] = await pool.execute(
-    `SELECT COALESCE(MAX(sort_order), -1) AS m FROM project_photos WHERE project_id = ? AND kind = ?`,
+    `SELECT COALESCE(MAX(sort_order), -1) AS m FROM project_photos WHERE project_id = ? AND kind = ? AND status = 1`,
     [projectId, kind]
   );
-  let sort = maxRow[0].m + 1;
+  let sort = Number(maxRow[0].m) + 1;
   for (const e of entries) {
     await pool.execute(
       `INSERT INTO project_photos (project_id, kind, file_path, original_name, sort_order, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -347,21 +345,6 @@ export async function getProjectById(id, { withPhotos = false } = {}) {
     mapped.afterPhotos = photos.filter((x) => x.kind === 'after');
   }
   return mapped;
-}
-
-export async function getProjectPhotoFolderKey(id) {
-  const pool = getPool();
-  const [rows] = await pool.execute(
-    `SELECT p.id, s.code AS state_code, COALESCE(NULLIF(TRIM(l.code), ''), CONCAT('loc', l.id)) AS pax_code
-     FROM projects p
-     INNER JOIN states s ON s.id = p.state_id
-     INNER JOIN locations l ON l.id = p.location_id
-     WHERE p.id = ? LIMIT 1`,
-    [id]
-  );
-  if (!rows.length) return null;
-  const r = rows[0];
-  return `${r.id}_${sanitizeFolderSegment(r.state_code)}_${sanitizeFolderSegment(r.pax_code)}`;
 }
 
 export async function createProject(body, createdBy) {
@@ -494,6 +477,7 @@ export async function updateProject(id, body, updatedBy) {
   return getProjectById(id);
 }
 
+/** Legacy PUT body oldPhoto/newPhoto — appends rows like multipart POST; does not replace the album. */
 export async function setProjectPhotoPaths(id, { old_photo_path, new_photo_path }, updatedBy) {
   const existing = await getProjectById(id);
   if (!existing) return null;

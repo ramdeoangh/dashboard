@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client.js';
+import { mediaUrlFromApi } from '../../config.js';
 
 export default function PhotoAlbumModal({ projectId, kind, title, onClose }) {
   const [photos, setPhotos] = useState([]);
@@ -14,7 +15,7 @@ export default function PhotoAlbumModal({ projectId, kind, title, onClose }) {
       try {
         const { data } = await api.get(`/admin/projects/${projectId}/photos`);
         const list = (data.data || []).filter((p) => p.kind === kind);
-        if (!cancelled) setPhotos(list);
+        if (!cancelled) setPhotos(list.map((p) => ({ ...p, url: mediaUrlFromApi(p.url) })));
       } catch (e) {
         if (!cancelled) setErr(e.response?.data?.error || 'Failed to load photos');
       } finally {

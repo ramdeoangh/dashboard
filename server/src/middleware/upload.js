@@ -10,21 +10,21 @@ function ensureDir(dir) {
 }
 
 /**
- * Multer storage: uploads/projects/{folderKey}/before|after/
- * req.projectPhotoFolderKey must be set by middleware (see projects routes).
+ * Multer storage: uploads/{projectId}/before|after/
+ * req.projectUploadId must be set by middleware (see projects routes).
  */
 export function createProjectImageUploader() {
   return multer({
     storage: multer.diskStorage({
       destination: (req, file, cb) => {
-        const key = req.projectPhotoFolderKey;
-        if (!key) {
+        const id = req.projectUploadId;
+        if (id == null || id === '' || Number.isNaN(Number(id))) {
           cb(new Error('Missing project upload folder context'));
           return;
         }
         const slot =
           file.fieldname === 'oldPhoto' || file.fieldname === 'beforePhotos' ? 'before' : 'after';
-        const dest = path.join(env.uploadDir, 'projects', String(key), slot);
+        const dest = path.join(env.uploadDir, String(id), slot);
         ensureDir(dest);
         cb(null, dest);
       },

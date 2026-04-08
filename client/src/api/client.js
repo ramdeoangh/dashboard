@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiBaseURL } from '../config.js';
+import { clearStoredRefreshToken, getStoredRefreshToken } from './refreshStorage.js';
 
 const api = axios.create({
   baseURL: apiBaseURL,
@@ -20,12 +21,22 @@ export function getAccessToken() {
 
 export async function refreshAccessToken() {
   if (!refreshPromise) {
+    const rt = getStoredRefreshToken();
+    const body = rt ? { refreshToken: rt } : {};
     refreshPromise = axios
-      .post(`${apiBaseURL}/auth/refresh`, {}, { withCredentials: true })
+      .post(`${apiBaseURL}/auth/refresh`, body, { withCredentials: true })
       .then((res) => {
         const t = res.data?.data?.accessToken;
         if (t) setAccessToken(t);
         return res.data?.data;
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          setAccessToken(null);
+          clearStoredRefreshToken();
+          return null;
+        }
+        throw err;
       })
       .finally(() => {
         refreshPromise = null;
@@ -33,6 +44,8 @@ export async function refreshAccessToken() {
   }
   return refreshPromise;
 }
+
+export { clearStoredRefreshToken, getStoredRefreshToken, setStoredRefreshToken } from './refreshStorage.js';
 
 api.interceptors.request.use((config) => {
   if (accessToken) {
@@ -61,6 +74,7 @@ api.interceptors.response.use(
         }
       } catch {
         setAccessToken(null);
+        clearStoredRefreshToken();
       }
     }
     return Promise.reject(error);

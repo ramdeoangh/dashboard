@@ -5,10 +5,20 @@ import { env } from '../config/env.js';
 /** Public URL prefix for files under upload dir */
 export const UPLOAD_PUBLIC_PREFIX = '/uploads';
 
+/**
+ * Public URL for a file stored relative to the upload dir (e.g. `2/before/abc.jpg`).
+ * When PUBLIC_API_URL is set (e.g. https://api.example.com), returns an absolute URL so
+ * SPAs on another origin can load images without a broken relative `/uploads/...` path.
+ */
 export function toPublicUrl(relativePath) {
   if (!relativePath) return null;
   const clean = String(relativePath).replace(/^\/+/, '').replace(/\.\./g, '');
-  return `${UPLOAD_PUBLIC_PREFIX}/${clean}`;
+  const pathFromRoot = `${UPLOAD_PUBLIC_PREFIX}/${clean}`;
+  const base = env.publicApiUrl?.trim().replace(/\/$/, '');
+  if (base) {
+    return `${base}${pathFromRoot}`;
+  }
+  return pathFromRoot;
 }
 
 export function absoluteUploadPath(relativePath) {

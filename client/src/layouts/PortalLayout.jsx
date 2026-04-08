@@ -5,7 +5,7 @@ import api from '../api/client.js';
 import ProfileMenu from '../components/ProfileMenu.jsx';
 
 export default function PortalLayout() {
-  const { user, logout, isAdminNav } = useAuth();
+  const { user, ready, logout, isAdminNav } = useAuth();
   const [portalName, setPortalName] = useState('');
 
   useEffect(() => {
@@ -36,9 +36,6 @@ export default function PortalLayout() {
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'active' : '')}>
             Home
           </NavLink>
-          <NavLink to="/reports" className={({ isActive }) => (isActive ? 'active' : '')}>
-            Reports
-          </NavLink>
           {isAdminNav && (
             <Link to="/admin" className="admin-link">
               Admin
@@ -46,7 +43,13 @@ export default function PortalLayout() {
           )}
         </nav>
         <div className="nav-right">
-          <ProfileMenu onSignOut={() => logout()} variant="portal" />
+          {!ready ? null : user ? (
+            <ProfileMenu onSignOut={() => logout()} variant="portal" />
+          ) : (
+            <Link to="/login" state={{ from: '/' }} className="btn btn-primary portal-login-btn">
+              Login
+            </Link>
+          )}
         </div>
       </header>
       <main className="portal-main">
@@ -75,6 +78,10 @@ export default function PortalLayout() {
         .nav-links a.active { color: var(--gold); }
         .admin-link { color: var(--gold) !important; font-weight: 600 !important; }
         .nav-right { display: flex; align-items: center; gap: 10px; }
+        .portal-login-btn {
+          text-decoration: none; display: inline-flex; align-items: center; justify-content: center;
+          border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.15); font-size: 13px; padding: 8px 14px;
+        }
         .portal-main { flex: 1; padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
       `}</style>
     </div>

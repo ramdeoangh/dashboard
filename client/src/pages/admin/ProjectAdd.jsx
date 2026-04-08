@@ -451,11 +451,20 @@ export default function ProjectAdd() {
               />
             </label>
             <p className="muted" style={{ fontSize: 12 }}>
-              Stored under <code>projects/&#123;id&#125;_&#123;state&#125;_&#123;pax&#125;/before|after</code>.
+              New uploads are <strong>added</strong> to the existing before/after sets; nothing is replaced. Files live
+              under <code>&#123;project_id&#125;/before</code> and <code>&#123;project_id&#125;/after</code>.
             </p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <button type="button" className="btn btn-ghost" onClick={() => setStep(1)} disabled={saving}>
                 Back
+              </button>
+              <button
+                type="button"
+                className="btn btn-navy"
+                disabled={saving || !projectId}
+                onClick={() => saveStep2AndPhotos()}
+              >
+                {saving ? 'Saving…' : 'Save photos & status'}
               </button>
               <button type="submit" className="btn btn-primary" disabled={saving || !projectId || isSubmitted}>
                 Final submit

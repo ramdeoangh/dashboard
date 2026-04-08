@@ -32,11 +32,11 @@ ReactDOM.createRoot(root).render(
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<PortalLayout />}>
+            <Route index element={<PortalDashboard />} />
+            <Route path="reports" element={<Reports />} />
+          </Route>
           <Route element={<ProtectedRoute />}>
-            <Route element={<PortalLayout />}>
-              <Route index element={<PortalDashboard />} />
-              <Route path="reports" element={<Reports />} />
-            </Route>
             <Route path="admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="settings" element={<Navigate to="/admin/settings/portal" replace />} />

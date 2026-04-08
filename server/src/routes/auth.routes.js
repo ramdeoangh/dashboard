@@ -22,13 +22,25 @@ const loginSchema = z.object({
 });
 
 const REFRESH_COOKIE = 'refreshToken';
-const cookieOpts = {
-  httpOnly: true,
-  secure: env.isProd,
-  sameSite: 'strict',
-  path: '/api/auth',
-  maxAge: env.jwt.refreshExpiresDays * 24 * 60 * 60 * 1000,
-};
+
+function refreshCookieOpts() {
+  return {
+    httpOnly: true,
+    secure: env.refreshCookieSecure,
+    sameSite: env.refreshCookieSameSite,
+    path: '/api/auth',
+    maxAge: env.jwt.refreshExpiresDays * 24 * 60 * 60 * 1000,
+  };
+}
+
+function clearRefreshCookie(res) {
+  res.clearCookie(REFRESH_COOKIE, {
+    path: '/api/auth',
+    httpOnly: true,
+    secure: env.refreshCookieSecure,
+    sameSite: env.refreshCookieSameSite,
+  });
+}
 
 router.post(
   '/login',
@@ -40,27 +52,31 @@ router.post(
     if (result.error) {
       return res.status(401).json({ success: false, error: result.error });
     }
-    res.cookie(REFRESH_COOKIE, result.refreshToken, cookieOpts);
-    res.json({
+    res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOpts());
+    const payload = {
       success: true,
       data: {
         accessToken: result.accessToken,
         user: result.user,
+        ...(env.refreshTokenAllowBodyAuth ? { refreshToken: result.refreshToken } : {}),
       },
-    });
+    };
+    res.json(payload);
   })
 );
 
 router.post(
   '/refresh',
   asyncHandler(async (req, res) => {
-    const token = req.cookies?.[REFRESH_COOKIE];
+    const fromBody =
+      typeof req.body?.refreshToken === 'string' ? req.body.refreshToken.trim() : '';
+    const token = req.cookies?.[REFRESH_COOKIE] || fromBody || null;
     if (!token) {
       return res.status(401).json({ success: false, error: 'No refresh token' });
     }
     const result = await authService.refresh(token);
     if (result.error) {
-      res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+      clearRefreshCookie(res);
       return res.status(401).json({ success: false, error: result.error });
     }
     res.json({
@@ -76,9 +92,11 @@ router.post(
 router.post(
   '/logout',
   asyncHandler(async (req, res) => {
-    const token = req.cookies?.[REFRESH_COOKIE];
+    const fromBody =
+      typeof req.body?.refreshToken === 'string' ? req.body.refreshToken.trim() : '';
+    const token = req.cookies?.[REFRESH_COOKIE] || fromBody || null;
     await authService.logout(token);
-    res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
+    clearRefreshCookie(res);
     res.json({ success: true });
   })
 );
