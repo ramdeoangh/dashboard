@@ -10,6 +10,7 @@ import { UPLOAD_PUBLIC_PREFIX } from './utils/uploadPath.js';
 import authRoutes from './routes/auth.routes.js';
 import portalRoutes from './routes/portal.routes.js';
 import adminRoutes from './routes/admin/index.js';
+import { getPool } from './config/database.js';
 import { mountSwagger } from './swaggerSetup.js';
 
 const app = express();
@@ -33,7 +34,20 @@ app.use((req, res, next) => {
 
 app.use(
   cors({
-    origin: env.clientOrigin,
+    origin(origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+      try {
+        const normalized = new URL(origin).origin;
+        if (env.clientOrigins.includes(normalized)) {
+          return callback(null, true);
+        }
+      } catch {
+        /* ignore */
+      }
+      callback(null, false);
+    },
     credentials: true,
   })
 );
@@ -57,6 +71,20 @@ app.use(
 
 app.get('/api/health', (req, res) => {
   res.json({ ok: true });
+});
+
+app.get('/api/health/db', async (req, res) => {
+  try {
+    const pool = getPool();
+    await pool.query('SELECT 1 AS ok');
+    res.json({ ok: true, database: 'connected' });
+  } catch (err) {
+    res.status(503).json({
+      ok: false,
+      database: 'unavailable',
+      error: env.isProd ? undefined : err.message,
+    });
+  }
 });
 
 mountSwagger(app);

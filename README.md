@@ -49,7 +49,9 @@ On macOS/Linux use `cp .env.example .env`.
 Edit **`server/.env`** and set:
 
 - **MySQL:** `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME` (e.g. `project_dashboard`)
-- **CORS:** `CLIENT_ORIGIN` must match the React dev URL, usually `http://localhost:5173`
+- **CORS:** `CLIENT_ORIGIN` — one origin or **comma-separated** list (e.g. `https://dashboard.y4dinfo.org,http://localhost:5173`). Values are normalized (trailing slashes ignored).
+- **Swagger servers (optional):** `PUBLIC_API_URL` — first entry in Swagger “Servers”; omit to rely on same-origin `/`.
+- **Production docs (optional):** `SWAGGER_DOCS_TOKEN` — if set, `GET /api/docs` and `GET /api/openapi.json` also accept header `X-API-Docs-Token` (otherwise use `Authorization: Bearer` after login). In `NODE_ENV=development`, docs stay open without this gate.
 - **JWT:** `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` — use long random strings (required for production)
 - **Audit (optional):** `LOG_HTTP_TO_DB` / `LOG_ERRORS_TO_DB` — set to `false` to turn off writing API/error rows to MySQL (`application_logs`)
 
@@ -82,6 +84,20 @@ This starts:
 - **Client:** http://localhost:5173 (Vite; proxies `/api` and `/uploads` to the API)
 
 Open **http://localhost:5173** in the browser.
+
+### API health check & Swagger (OpenAPI)
+
+With the API running, base URL is **`http://localhost:{PORT}`** (default **`http://localhost:4000`**; set `PORT` in `server/.env`).
+
+| What | URL | Notes |
+|------|-----|--------|
+| **Health (process)** | `GET /api/health` | e.g. `http://localhost:4000/api/health` — `{ "ok": true }`. No auth. |
+| **Health (database)** | `GET /api/health/db` | Runs `SELECT 1` against MySQL. `{ "ok": true, "database": "connected" }` or **503** if DB is down. No auth. |
+| **Swagger UI** | `/api/docs` | Interactive docs. **Development:** open freely. **Production:** requires `Authorization: Bearer <accessToken>` (e.g. browser extension adding the header) or `X-API-Docs-Token` if `SWAGGER_DOCS_TOKEN` is set. Health routes above stay public. |
+| **OpenAPI JSON** | `/api/openapi.json` | Same protection as Swagger UI in production. |
+| **Servers in Swagger** | (dropdown) | If `PUBLIC_API_URL` is set, it appears as a server entry; **Same origin** (`/`) is always listed for Try it out on the API host. |
+
+In production, replace the host with your deployed API origin (same paths).
 
 **Run separately (optional):**
 

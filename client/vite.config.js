@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, '');
-  const proxyTarget = env.VITE_DEV_PROXY_TARGET || 'http://localhost:4000';
+  const proxyTarget = env.VITE_DEV_PROXY_TARGET || 'https://api.y4d.ngo';
 
   return {
     plugins: [react()],

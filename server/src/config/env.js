@@ -15,11 +15,41 @@ function req(name, fallback = undefined) {
   return v;
 }
 
+/** Normalize origin for CORS comparison (no trailing path slash on origin). */
+function normalizeOriginString(s) {
+  const t = s.trim();
+  if (!t) return '';
+  try {
+    return new URL(t).origin;
+  } catch {
+    return t.replace(/\/$/, '');
+  }
+}
+
+/** Comma-separated CLIENT_ORIGIN values (e.g. production dashboard + local Vite). */
+function parseClientOrigins(raw) {
+  return raw
+    .split(',')
+    .map((s) => normalizeOriginString(s))
+    .filter(Boolean);
+}
+
+const clientOrigins = parseClientOrigins(
+  process.env.CLIENT_ORIGIN || 'http://localhost:5173'
+);
+
 export const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProd: process.env.NODE_ENV === 'production',
   port: Number(process.env.PORT || 4000),
-  clientOrigin: req('CLIENT_ORIGIN', 'http://localhost:5173'),
+  /** All allowed CORS origins */
+  clientOrigins,
+  /** First origin (legacy / defaults) */
+  clientOrigin: clientOrigins[0] || 'http://localhost:5173',
+  /** Optional absolute API base for OpenAPI "Servers" (no trailing slash). */
+  publicApiUrl: process.env.PUBLIC_API_URL?.trim().replace(/\/$/, '') || '',
+  /** If set in production, Swagger accepts `X-API-Docs-Token` matching this value (JWT still works). */
+  swaggerDocsToken: process.env.SWAGGER_DOCS_TOKEN?.trim() || '',
   db: {
     host: req('DATABASE_HOST', '127.0.0.1'),
     port: Number(process.env.DATABASE_PORT || 3306),

@@ -1,0 +1,3 @@
+# Required by some CloudLinux / Hostinger Node.js setups: the control panel expects
+# this file to exist in the application root so it can add or remove Passenger lines.
+# Safe to keep minimal; your host may inject directives when you configure the Node app.

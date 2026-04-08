@@ -1,5 +1,6 @@
 import swaggerUi from 'swagger-ui-express';
-import { openApiSpec } from './docs/openapiSpec.js';
+import { buildOpenApiSpec } from './docs/openapiSpec.js';
+import { requireSwaggerAccess } from './middleware/swaggerAccess.js';
 
 const ui = swaggerUi.default ?? swaggerUi;
 
@@ -7,14 +8,15 @@ const ui = swaggerUi.default ?? swaggerUi;
  * @param {import('express').Express} app
  */
 export function mountSwagger(app) {
-  app.get('/api/openapi.json', (req, res) => {
-    res.json(openApiSpec);
+  app.get('/api/openapi.json', requireSwaggerAccess, (req, res) => {
+    res.json(buildOpenApiSpec());
   });
 
   app.use(
     '/api/docs',
+    requireSwaggerAccess,
     ui.serve,
-    ui.setup(openApiSpec, {
+    ui.setup(buildOpenApiSpec(), {
       customSiteTitle: 'Project Reporting API',
       swaggerOptions: {
         persistAuthorization: true,
