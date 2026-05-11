@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,12 +21,19 @@ export default function AdminDashboard() {
 
   if (loading) return <Spinner />;
 
-  const cards = [
-    { label: 'Users', value: data?.users ?? 0 },
-    { label: 'Projects', value: data?.projects ?? 0 },
-    { label: 'States', value: data?.states ?? 0 },
-    { label: 'Locations', value: data?.locations ?? 0 },
-  ];
+  const cards = user?.partnerId
+    ? [
+        { label: 'Projects (your partner)', value: data?.projects ?? 0 },
+        { label: 'Users (your partner)', value: data?.users ?? 0 },
+        { label: 'States (reference)', value: data?.states ?? 0 },
+        { label: 'Locations (reference)', value: data?.locations ?? 0 },
+      ]
+    : [
+        { label: 'Users', value: data?.users ?? 0 },
+        { label: 'Projects', value: data?.projects ?? 0 },
+        { label: 'States', value: data?.states ?? 0 },
+        { label: 'Locations', value: data?.locations ?? 0 },
+      ];
 
   return (
     <div>

@@ -20,8 +20,23 @@ DROP TABLE IF EXISTS pages;
 DROP TABLE IF EXISTS settings;
 DROP TABLE IF EXISTS application_logs;
 DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS partners;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE partners (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  slug VARCHAR(100) NOT NULL,
+  logo_path VARCHAR(500) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_by INT UNSIGNED NULL,
+  updated_by INT UNSIGNED NULL,
+  UNIQUE KEY uk_partners_slug (slug),
+  KEY idx_partners_active (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE users (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -29,6 +44,7 @@ CREATE TABLE users (
   username VARCHAR(100) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   display_name VARCHAR(255) NOT NULL DEFAULT '',
+  partner_id INT UNSIGNED NULL COMMENT 'NULL = global admin; set for partner-scoped users',
   is_active TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 active, 0 inactive (row status)',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -36,6 +52,8 @@ CREATE TABLE users (
   updated_by INT UNSIGNED NULL,
   UNIQUE KEY uk_users_email (email),
   UNIQUE KEY uk_users_username (username),
+  KEY idx_users_partner (partner_id),
+  CONSTRAINT fk_users_partner FOREIGN KEY (partner_id) REFERENCES partners (id) ON DELETE RESTRICT,
   CONSTRAINT fk_users_created_by FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
   CONSTRAINT fk_users_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -243,6 +261,7 @@ CREATE TABLE projects (
   category_id INT UNSIGNED NOT NULL,
   state_id INT UNSIGNED NOT NULL,
   location_id INT UNSIGNED NOT NULL,
+  partner_id INT UNSIGNED NOT NULL,
   status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 active, 0 soft-deleted',
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -251,13 +270,15 @@ CREATE TABLE projects (
   CONSTRAINT fk_projects_category FOREIGN KEY (category_id) REFERENCES project_categories (id),
   CONSTRAINT fk_projects_state FOREIGN KEY (state_id) REFERENCES states (id),
   CONSTRAINT fk_projects_location FOREIGN KEY (location_id) REFERENCES locations (id),
+  CONSTRAINT fk_projects_partner FOREIGN KEY (partner_id) REFERENCES partners (id) ON DELETE RESTRICT,
   CONSTRAINT fk_projects_user FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE SET NULL,
   CONSTRAINT fk_projects_updated_by FOREIGN KEY (updated_by) REFERENCES users (id) ON DELETE SET NULL,
   CONSTRAINT fk_projects_approved_by FOREIGN KEY (approved_by) REFERENCES users (id) ON DELETE SET NULL,
   KEY idx_projects_state_loc (state_id, location_id),
   KEY idx_projects_status (status),
   KEY idx_projects_submitted (is_submitted, is_approved),
-  KEY idx_projects_category (category_id)
+  KEY idx_projects_category (category_id),
+  KEY idx_projects_partner (partner_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE project_photos (

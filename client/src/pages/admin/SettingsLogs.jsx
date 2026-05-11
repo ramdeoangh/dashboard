@@ -46,7 +46,6 @@ function buildFullPayload(row) {
 
 export default function SettingsLogs() {
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -59,7 +58,6 @@ export default function SettingsLogs() {
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
-    setErr('');
     try {
       const params = { page, pageSize };
       if (filters.q.trim()) params.q = filters.q.trim();
@@ -71,8 +69,7 @@ export default function SettingsLogs() {
       setRows(d.items ?? []);
       setTotal(d.total ?? 0);
       setTotalPages(d.totalPages ?? 1);
-    } catch (e) {
-      setErr(e.response?.data?.error || 'Failed to load logs');
+    } catch {
       setRows([]);
       setTotal(0);
       setTotalPages(1);
@@ -141,12 +138,6 @@ export default function SettingsLogs() {
           </button>
         </div>
       </form>
-
-      {err && (
-        <p className="log-error" role="alert">
-          {err}
-        </p>
-      )}
 
       {loading && !rows.length ? (
         <Spinner />
@@ -243,7 +234,6 @@ export default function SettingsLogs() {
         .log-filters label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; color: var(--navy); }
         .log-filters input { padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; }
         .log-filters__actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-        .log-error { color: var(--danger); font-weight: 600; margin-top: 12px; }
         .log-summary { margin: 8px 0 12px; }
         .log-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
         .log-card { padding: 0; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); }

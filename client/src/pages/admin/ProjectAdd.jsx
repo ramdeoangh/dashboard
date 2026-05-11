@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { toastError, toastSuccess } from '../../toastBus.js';
 
 function normMobile(s) {
   return String(s || '')
@@ -36,16 +38,19 @@ const emptyStep1 = {
   state_id: '',
   location_id: '',
   category_id: '',
+  partner_id: '',
 };
 
 export default function ProjectAdd() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [projectId, setProjectId] = useState(null);
   const [states, setStates] = useState([]);
   const [locations, setLocations] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form1, setForm1] = useState(emptyStep1);
@@ -54,6 +59,9 @@ export default function ProjectAdd() {
   const [beforeFiles, setBeforeFiles] = useState([]);
   const [afterFiles, setAfterFiles] = useState([]);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  /** Global admins creating a new project must pick partner on a dedicated screen first. */
+  const [partnerGateDone, setPartnerGateDone] = useState(Boolean(user?.partnerId));
+  const [gatePartnerId, setGatePartnerId] = useState('');
 
   const loadProject = useCallback(async (id, targetStep = 1) => {
     setSaving(true);
@@ -76,11 +84,13 @@ export default function ProjectAdd() {
         state_id: String(p.stateId),
         location_id: String(p.locationId),
         category_id: String(p.categoryId || ''),
+        partner_id: p.partnerId != null ? String(p.partnerId) : '',
       });
       setWorkflowStatus(p.workflowStatus || 'in_progress');
       setBlockReason(p.blockReason || '');
       setIsSubmitted(Boolean(p.isSubmitted));
       setStep(targetStep === 2 ? 2 : 1);
+      return p;
     } finally {
       setSaving(false);
     }
@@ -96,9 +106,22 @@ export default function ProjectAdd() {
         if (cancelled) return;
         setStates(s.data.data || []);
         setCategories(c.data.data || []);
+        if (!user?.partnerId) {
+          try {
+            const pr = await api.get('/admin/partners');
+            if (!cancelled) setPartners(pr.data?.data || []);
+          } catch {
+            if (!cancelled) setPartners([]);
+          }
+        } else if (!cancelled) {
+          setPartners([]);
+        }
         if (editId) {
           const wantStep2 = searchParams.get('step') === '2';
-          await loadProject(Number(editId), wantStep2 ? 2 : 1);
+          const p = await loadProject(Number(editId), wantStep2 ? 2 : 1);
+          if (!cancelled && p && !user?.partnerId) {
+            setPartnerGateDone(false);
+          }
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -107,7 +130,11 @@ export default function ProjectAdd() {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, loadProject]);
+  }, [searchParams, loadProject, user?.partnerId]);
+
+  useEffect(() => {
+    if (user?.partnerId) setPartnerGateDone(true);
+  }, [user?.partnerId]);
 
   useEffect(() => {
     if (!form1.state_id) {
@@ -139,23 +166,27 @@ export default function ProjectAdd() {
   async function saveStep1AndNext(e) {
     e.preventDefault();
     if (!validMobile(form1.contact_number)) {
-      alert('Enter a valid 10-digit Indian mobile number (starting with 6–9).');
+      toastError('Enter a valid 10-digit Indian mobile number (starting with 6–9).');
       return;
     }
     if (!validPin(form1.pincode)) {
-      alert('Enter a valid 6-digit PIN code.');
+      toastError('Enter a valid 6-digit PIN code.');
       return;
     }
     if (!form1.category_id) {
-      alert('Select a project category.');
+      toastError('Select a project category.');
+      return;
+    }
+    if (!projectId && !user?.partnerId && !form1.partner_id) {
+      toastError('Select which partner this project belongs to.');
       return;
     }
     if (!form1.start_date || !form1.end_date) {
-      alert('Select start date and end date.');
+      toastError('Select start date and end date.');
       return;
     }
     if (form1.end_date < form1.start_date) {
-      alert('End date must be on or after start date.');
+      toastError('End date must be on or after start date.');
       return;
     }
     setSaving(true);
@@ -176,6 +207,13 @@ export default function ProjectAdd() {
         location_id: Number(form1.location_id),
         category_id: Number(form1.category_id),
       };
+      if (!projectId) {
+        if (user?.partnerId) {
+          payload.partner_id = Number(user.partnerId);
+        } else if (form1.partner_id) {
+          payload.partner_id = Number(form1.partner_id);
+        }
+      }
       if (projectId) {
         await api.patch(`/admin/projects/${projectId}`, payload);
       } else {
@@ -185,7 +223,7 @@ export default function ProjectAdd() {
       setStep(2);
     } catch (err) {
       const msg = err.response?.data?.details?.fieldErrors || err.response?.data?.error;
-      alert(typeof msg === 'object' ? JSON.stringify(msg) : msg || 'Save failed');
+      toastError(typeof msg === 'object' ? JSON.stringify(msg) : msg || 'Save failed');
     } finally {
       setSaving(false);
     }
@@ -193,13 +231,14 @@ export default function ProjectAdd() {
 
   async function saveStep2AndPhotos() {
     if (!projectId) return;
+    const hadPhotoUploads = beforeFiles.length > 0 || afterFiles.length > 0;
     setSaving(true);
     try {
       await api.patch(`/admin/projects/${projectId}`, {
         workflow_status: workflowStatus,
         block_reason: workflowStatus === 'blocked' ? blockReason : null,
       });
-      if (beforeFiles.length || afterFiles.length) {
+      if (hadPhotoUploads) {
         const fd = new FormData();
         beforeFiles.forEach((f) => fd.append('beforePhotos', f));
         afterFiles.forEach((f) => fd.append('afterPhotos', f));
@@ -209,8 +248,9 @@ export default function ProjectAdd() {
         setBeforeFiles([]);
         setAfterFiles([]);
       }
+      toastSuccess(hadPhotoUploads ? 'Photos and status saved.' : 'Workflow status saved.');
     } catch (err) {
-      alert(err.response?.data?.error || 'Update failed');
+      toastError(err.response?.data?.error || 'Update failed');
     } finally {
       setSaving(false);
     }
@@ -225,7 +265,7 @@ export default function ProjectAdd() {
       await api.post(`/admin/projects/${projectId}/submit`);
       navigate('/admin/projects/manage', { replace: true });
     } catch (err) {
-      alert(err.response?.data?.error || 'Submit failed');
+      toastError(err.response?.data?.error || 'Submit failed');
     } finally {
       setSaving(false);
     }
@@ -245,14 +285,157 @@ export default function ProjectAdd() {
     return active;
   }, [states, form1.state_id]);
 
+  const pageTitle = searchParams.get('edit') ? 'Edit project' : 'Add project';
+  const showPartnerGateScreen = Boolean(!user?.partnerId && !partnerGateDone);
+  const selectedPartnerLabel = partners.find((p) => String(p.id) === String(form1.partner_id))?.name;
+
+  function continueFromPartnerGate(e) {
+    e.preventDefault();
+    if (!gatePartnerId) {
+      toastError('Select a partner organisation.');
+      return;
+    }
+    setForm1((f) => ({ ...f, partner_id: gatePartnerId }));
+    setPartnerGateDone(true);
+  }
+
+  function reopenPartnerGate() {
+    setPartnerGateDone(false);
+    setGatePartnerId(form1.partner_id || '');
+    setForm1((f) => ({ ...f, partner_id: '' }));
+  }
+
   if (loading) return <Spinner />;
+
+  if (showPartnerGateScreen) {
+    const isEditSession = Boolean(searchParams.get('edit') && projectId);
+    const partnerDisplayName =
+      selectedPartnerLabel || (form1.partner_id ? `Partner #${form1.partner_id}` : '—');
+
+    if (isEditSession) {
+      return (
+        <div>
+          <h1 className="page-title">{pageTitle}</h1>
+          <p className="muted" style={{ marginBottom: 20 }}>
+            Confirm the partner organisation for this project, then continue to details and photos (steps 1 and 2).
+          </p>
+          <div className="card" style={{ maxWidth: 680, padding: 24 }}>
+            <h2 style={{ fontSize: '1.1rem', marginBottom: 12 }}>Partner organisation</h2>
+            <p className="muted" style={{ fontSize: 14, marginBottom: 16 }}>
+              This project is tied to the partner below. Partner cannot be changed here; confirm to open the form.
+            </p>
+            <div
+              style={{
+                fontSize: '1.35rem',
+                fontWeight: 600,
+                padding: '20px 18px',
+                borderRadius: 10,
+                border: '2px solid var(--border)',
+                background: 'var(--off-white)',
+                marginBottom: 20,
+              }}
+            >
+              {partnerDisplayName}
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: '14px 28px', fontSize: '1.05rem' }}
+              onClick={() => setPartnerGateDone(true)}
+            >
+              Continue to project details
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        <h1 className="page-title">{pageTitle}</h1>
+        <p className="muted" style={{ marginBottom: 20 }}>
+          Choose the partner organisation first. After you continue, you will enter location, dates, and the rest of the
+          project (steps 1 and 2 of 2).
+        </p>
+        <div className="card" style={{ maxWidth: 680, padding: 24 }}>
+          <h2 style={{ fontSize: '1.1rem', marginBottom: 8 }}>Partner organisation</h2>
+          <p className="muted" style={{ fontSize: 14, marginBottom: 20 }}>
+            This choice applies to the whole project. You can change it only before the first save of project details.
+          </p>
+          <form onSubmit={continueFromPartnerGate} className="form-grid">
+            <label style={{ display: 'block' }}>
+              <span className="muted" style={{ fontSize: 12, display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                Select partner
+              </span>
+              <select
+                required
+                value={gatePartnerId}
+                onChange={(e) => setGatePartnerId(e.target.value)}
+                style={{
+                  width: '100%',
+                  fontSize: '1.2rem',
+                  lineHeight: 1.45,
+                  padding: '18px 16px',
+                  borderRadius: 10,
+                  border: '2px solid var(--border)',
+                  background: 'var(--off-white)',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <option value="">Choose partner…</option>
+                {partners.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {partners.length === 0 ? (
+              <p className="muted" style={{ fontSize: 14 }}>
+                No active partners found. Add one under <strong>Masters → Partners</strong> first.
+              </p>
+            ) : null}
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ marginTop: 12, padding: '14px 28px', fontSize: '1.05rem', alignSelf: 'flex-start' }}
+            >
+              Continue to project details
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h1 className="page-title">Add project</h1>
+      <h1 className="page-title">{pageTitle}</h1>
       <p className="muted" style={{ marginBottom: 16 }}>
         Step {step} of 2 — all fields in step 1 are required. Then add photos and submit.
       </p>
+
+      {!projectId && !user?.partnerId && partnerGateDone && form1.partner_id ? (
+        <div
+          className="card"
+          style={{
+            marginBottom: 16,
+            padding: '14px 18px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <span style={{ fontSize: 15 }}>
+            Partner: <strong>{selectedPartnerLabel || `ID ${form1.partner_id}`}</strong>
+          </span>
+          <button type="button" className="btn btn-ghost" onClick={reopenPartnerGate}>
+            Change partner
+          </button>
+        </div>
+      ) : null}
 
       {step === 1 && (
         <div className="card" style={{ marginBottom: 20 }}>
@@ -331,6 +514,12 @@ export default function ProjectAdd() {
                 ))}
               </select>
             </label>
+            {!projectId && user?.partnerId ? (
+              <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+                Partner: <strong>{user.partnerName || `ID ${user.partnerId}`}</strong> — new projects are created for
+                your organisation.
+              </p>
+            ) : null}
             <label>
               Beneficiary details
               <textarea

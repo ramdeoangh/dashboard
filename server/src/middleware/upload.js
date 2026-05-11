@@ -60,3 +60,29 @@ export const logoUpload = multer({
     else cb(new Error('Invalid image type'));
   },
 });
+
+/** Multer for partner logos: uploads/partners/{id}/ — set req.partnerUploadId before use. */
+export const partnerLogoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const id = req.partnerUploadId;
+      if (id == null || id === '' || Number.isNaN(Number(id))) {
+        cb(new Error('Missing partner upload folder context'));
+        return;
+      }
+      const dest = path.join(env.uploadDir, 'partners', String(id));
+      ensureDir(dest);
+      cb(null, dest);
+    },
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const safe = ['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(ext) ? ext : '.png';
+      cb(null, `logo-${Date.now()}-${Math.random().toString(36).slice(2)}${safe}`);
+    },
+  }),
+  limits: { fileSize: env.maxUploadMb * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (allowedMime.has(file.mimetype)) cb(null, true);
+    else cb(new Error('Invalid image type'));
+  },
+});

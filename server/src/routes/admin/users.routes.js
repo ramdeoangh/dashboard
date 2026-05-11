@@ -8,7 +8,17 @@ import * as userService from '../../services/userService.js';
 const router = Router();
 router.use(requireAuth);
 
+function actorPartnerIdFromReq(req) {
+  const p = req.auth?.partnerId;
+  return p != null && Number.isFinite(Number(p)) && Number(p) > 0 ? Number(p) : null;
+}
+
 const idParam = z.object({ id: z.coerce.number().int().positive() });
+
+const partnerIdField = z.preprocess(
+  (v) => (v === '' ? null : v),
+  z.union([z.null(), z.coerce.number().int().positive()]).optional()
+);
 
 const usernameEmailRefine = (data, ctx) => {
   const { username, email } = data;
@@ -34,6 +44,7 @@ const createBody = z
     display_name: z.string().max(255).optional(),
     is_active: z.boolean().optional(),
     role_ids: z.array(z.number().int().positive()).optional(),
+    partner_id: partnerIdField,
   })
   .superRefine(usernameEmailRefine);
 
@@ -45,6 +56,7 @@ const updateBody = z
     is_active: z.boolean().optional(),
     password: z.union([z.string().min(8).max(200), z.literal('')]).optional(),
     role_ids: z.array(z.number().int().positive()).optional(),
+    partner_id: partnerIdField,
   })
   .superRefine(usernameEmailRefine);
 
@@ -52,7 +64,7 @@ router.get(
   '/',
   requirePermission('users.view'),
   asyncHandler(async (req, res) => {
-    const data = await userService.listUsers();
+    const data = await userService.listUsers(actorPartnerIdFromReq(req));
     res.json({ success: true, data });
   })
 );
@@ -62,7 +74,7 @@ router.get(
   requirePermission('users.view'),
   validateParams(idParam),
   asyncHandler(async (req, res) => {
-    const row = await userService.getUserById(req.validated.params.id);
+    const row = await userService.getUserById(req.validated.params.id, actorPartnerIdFromReq(req));
     if (!row) throw new AppError(404, 'User not found');
     res.json({ success: true, data: row });
   })
@@ -73,7 +85,7 @@ router.post(
   requirePermission('users.create'),
   validateBody(createBody),
   asyncHandler(async (req, res) => {
-    const id = await userService.createUser(req.validated.body, req.auth.userId);
+    const id = await userService.createUser(req.validated.body, req.auth.userId, actorPartnerIdFromReq(req));
     res.status(201).json({ success: true, data: { id } });
   })
 );
@@ -86,7 +98,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const body = { ...req.validated.body };
     if (body.password === '') delete body.password;
-    const ok = await userService.updateUser(req.validated.params.id, body);
+    const ok = await userService.updateUser(req.validated.params.id, body, actorPartnerIdFromReq(req));
     if (!ok) throw new AppError(404, 'User not found');
     res.json({ success: true });
   })
@@ -101,7 +113,7 @@ router.delete(
     if (id === req.auth.userId) {
       throw new AppError(400, 'Cannot delete your own account');
     }
-    const ok = await userService.deleteUser(id);
+    const ok = await userService.deleteUser(id, actorPartnerIdFromReq(req));
     if (!ok) throw new AppError(404, 'User not found');
     res.json({ success: true });
   })

@@ -4,7 +4,8 @@ SET NAMES utf8mb4;
 INSERT INTO roles (name, slug, description) VALUES
   ('Super Admin', 'super_admin', 'Full system access'),
   ('Admin', 'admin', 'Manage content and users'),
-  ('Viewer', 'viewer', 'Read-only portal access')
+  ('Viewer', 'viewer', 'Read-only portal access'),
+  ('Partner', 'partner', 'Manage projects for one partner organisation')
 ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description);
 
 INSERT INTO permissions (name, slug, resource, action) VALUES
@@ -28,7 +29,9 @@ INSERT INTO permissions (name, slug, resource, action) VALUES
   ('Projects delete', 'projects.delete', 'projects', 'delete'),
   ('Projects approve', 'projects.approve', 'projects', 'approve'),
   ('Categories view', 'categories.view', 'categories', 'view'),
-  ('Categories edit', 'categories.edit', 'categories', 'edit')
+  ('Categories edit', 'categories.edit', 'categories', 'edit'),
+  ('Partners view', 'partners.view', 'partners', 'view'),
+  ('Partners edit', 'partners.edit', 'partners', 'edit')
 ON DUPLICATE KEY UPDATE name = VALUES(name), resource = VALUES(resource), action = VALUES(action);
 
 INSERT INTO role_permissions (role_id, permission_id)
@@ -44,6 +47,14 @@ ON DUPLICATE KEY UPDATE role_id = role_id;
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id FROM roles r CROSS JOIN permissions p
 WHERE r.slug = 'viewer' AND p.slug IN ('projects.view')
+ON DUPLICATE KEY UPDATE role_id = role_id;
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id FROM roles r CROSS JOIN permissions p
+WHERE r.slug = 'partner' AND p.slug IN (
+  'projects.view', 'projects.create', 'projects.edit', 'projects.delete',
+  'categories.view', 'states.view', 'partners.view'
+)
 ON DUPLICATE KEY UPDATE role_id = role_id;
 
 -- Top-level menu order: Projects, Users & Roles, Masters, Settings (last). Dashboard row exists for legacy; sidebar uses hardcoded Dashboard.
@@ -92,6 +103,10 @@ SELECT m.id, 'Add PAX', 'locations', '/admin/locations', 1 FROM menus m WHERE m.
 ON DUPLICATE KEY UPDATE name = VALUES(name), path = VALUES(path), sort_order = VALUES(sort_order);
 
 INSERT INTO submenus (menu_id, name, slug, path, sort_order)
+SELECT m.id, 'Partners', 'masters-partners', '/admin/partners', 2 FROM menus m WHERE m.slug = 'masters' LIMIT 1
+ON DUPLICATE KEY UPDATE name = VALUES(name), path = VALUES(path), sort_order = VALUES(sort_order);
+
+INSERT INTO submenus (menu_id, name, slug, path, sort_order)
 SELECT m.id, 'Manage project', 'projects-manage', '/admin/projects/manage', 0 FROM menus m WHERE m.slug = 'projects' LIMIT 1
 ON DUPLICATE KEY UPDATE name = VALUES(name), path = VALUES(path), sort_order = VALUES(sort_order);
 
@@ -129,8 +144,22 @@ CROSS JOIN roles r
 WHERE r.slug IN ('super_admin', 'admin') AND s.status = 1 AND m.status = 1
 ON DUPLICATE KEY UPDATE submenu_id = submenu_id;
 
+INSERT INTO submenu_roles (submenu_id, role_id)
+SELECT s.id, r.id FROM submenus s
+INNER JOIN menus m ON m.id = s.menu_id
+CROSS JOIN roles r
+WHERE r.slug = 'partner' AND m.slug = 'projects'
+  AND s.slug IN ('projects-manage', 'projects-add') AND s.status = 1 AND m.status = 1
+ON DUPLICATE KEY UPDATE submenu_id = submenu_id;
+
+INSERT INTO menu_roles (menu_id, role_id)
+SELECT m.id, r.id FROM menus m CROSS JOIN roles r
+WHERE r.slug = 'partner' AND m.slug IN ('dashboard', 'projects') AND m.status = 1
+ON DUPLICATE KEY UPDATE menu_id = menu_id;
+
 INSERT INTO settings (setting_key, setting_value) VALUES
   ('portal.name', '"Project Reporting Portal"'),
+  ('portal.nav_title', '"Project Report"'),
   ('portal.logo_path', 'null'),
   ('portal.header_html', '"<p>Official project reporting</p>"'),
   ('portal.footer_html', '"<p>&copy; 2026</p>"'),
@@ -148,3 +177,7 @@ ON DUPLICATE KEY UPDATE name = VALUES(name), status = VALUES(status);
 INSERT INTO pages (title, slug, content, is_published, sort_order) VALUES
   ('About', 'about', '<p>About this portal.</p>', 1, 1)
 ON DUPLICATE KEY UPDATE title = VALUES(title), content = VALUES(content), is_published = VALUES(is_published);
+
+INSERT INTO partners (name, slug, is_active) VALUES
+  ('Default', 'default', 1)
+ON DUPLICATE KEY UPDATE name = VALUES(name), is_active = VALUES(is_active);

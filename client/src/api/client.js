@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { apiBaseURL } from '../config.js';
+import { toastApiError } from '../toastBus.js';
 import { clearStoredRefreshToken, getStoredRefreshToken } from './refreshStorage.js';
 
 const api = axios.create({
@@ -77,6 +78,16 @@ api.interceptors.response.use(
         clearStoredRefreshToken();
       }
     }
+
+    if (!original?.skipErrorToast && !url.includes('/auth/refresh')) {
+      const silent401 =
+        error.response?.status === 401 &&
+        (url.includes('/auth/login') || url.includes('/auth/me'));
+      if (!silent401) {
+        toastApiError(error);
+      }
+    }
+
     return Promise.reject(error);
   }
 );

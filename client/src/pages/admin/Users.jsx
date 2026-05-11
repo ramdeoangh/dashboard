@@ -3,6 +3,8 @@ import api from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
 import AdminDataTable from '../../components/admin/AdminDataTable.jsx';
 import ToggleSwitch from '../../components/ToggleSwitch.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { toastError, toastSuccess } from '../../toastBus.js';
 
 const emptyIdentity = {
   email: '',
@@ -10,26 +12,38 @@ const emptyIdentity = {
   password: '',
   display_name: '',
   useEmailAsUsername: false,
+  partner_id: '',
 };
 
 export default function Users() {
+  const { user } = useAuth();
   const [rows, setRows] = useState([]);
   const [roles, setRoles] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
   const [identityForm, setIdentityForm] = useState(emptyIdentity);
   const [identityEditId, setIdentityEditId] = useState(null);
+  const [savingIdentity, setSavingIdentity] = useState(false);
+  const [savingRoles, setSavingRoles] = useState(false);
   const [toggleBusyId, setToggleBusyId] = useState(null);
   const [rolePanelUserId, setRolePanelUserId] = useState(null);
   const [rolePanelIds, setRolePanelIds] = useState([]);
 
   async function refresh() {
-    const [u, r] = await Promise.all([api.get('/admin/users'), api.get('/admin/roles')]);
+    const [u, r, p] = await Promise.all([
+      api.get('/admin/users'),
+      api.get('/admin/roles'),
+      api.get('/admin/partners'),
+    ]);
     setRows(u.data.data || []);
     setRoles(r.data.data || []);
+    setPartners(p.data.data || []);
   }
 
   useEffect(() => {
-    refresh().finally(() => setLoading(false));
+    refresh()
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -64,6 +78,16 @@ export default function Users() {
 
   async function saveIdentity(e) {
     e.preventDefault();
+    const pw = identityForm.password;
+    if (!identityEditId) {
+      if (!pw || pw.length < 8) {
+        toastError('Password must be at least 8 characters.');
+        return;
+      }
+    } else if (pw && pw.length < 8) {
+      toastError('New password must be at least 8 characters (or leave blank to keep the current password).');
+      return;
+    }
     const body = {
       email: identityForm.email.trim(),
       username: identityForm.username.trim(),
@@ -71,36 +95,66 @@ export default function Users() {
       is_active: true,
       role_ids: [],
     };
-    if (identityEditId) {
-      const u = rows.find((x) => x.id === identityEditId);
-      body.is_active = u?.isActive ?? true;
-      if (identityForm.password) body.password = identityForm.password;
-      await api.put(`/admin/users/${identityEditId}`, body);
+    if (user?.partnerId != null && Number(user.partnerId) > 0) {
+      body.partner_id = Number(user.partnerId);
+    } else if (identityForm.partner_id !== '' && identityForm.partner_id != null) {
+      const n = Number(identityForm.partner_id);
+      if (!Number.isInteger(n) || n <= 0) {
+        toastError('Invalid partner selection; pick a partner from the list or None.');
+        return;
+      }
+      body.partner_id = n;
     } else {
-      await api.post('/admin/users', {
-        ...body,
-        password: identityForm.password,
-        role_ids: [],
-      });
+      body.partner_id = null;
     }
-    setIdentityForm(emptyIdentity);
-    setIdentityEditId(null);
-    await refresh();
+    setSavingIdentity(true);
+    try {
+      if (identityEditId) {
+        const u = rows.find((x) => x.id === identityEditId);
+        body.is_active = u?.isActive ?? true;
+        if (identityForm.password) body.password = identityForm.password;
+        await api.put(`/admin/users/${identityEditId}`, body);
+        toastSuccess('User updated.');
+      } else {
+        await api.post('/admin/users', {
+          ...body,
+          password: identityForm.password,
+          role_ids: [],
+        });
+        toastSuccess('User created.');
+      }
+      setIdentityForm(emptyIdentity);
+      setIdentityEditId(null);
+      await refresh();
+    } catch {
+      /* error toast from API client interceptor */
+    } finally {
+      setSavingIdentity(false);
+    }
   }
 
   async function saveRolePanel() {
     if (!rolePanelUserId) return;
     const u = rows.find((x) => x.id === rolePanelUserId);
     if (!u) return;
-    await api.put(`/admin/users/${rolePanelUserId}`, {
-      email: u.email,
-      username: u.username,
-      display_name: u.displayName || '',
-      is_active: u.isActive,
-      role_ids: rolePanelIds,
-    });
-    setRolePanelUserId(null);
-    await refresh();
+    setSavingRoles(true);
+    try {
+      await api.put(`/admin/users/${rolePanelUserId}`, {
+        email: u.email,
+        username: u.username,
+        display_name: u.displayName || '',
+        is_active: u.isActive,
+        role_ids: rolePanelIds,
+        partner_id: u.partnerId ?? null,
+      });
+      toastSuccess(`Roles saved for ${u.username}.`);
+      setRolePanelUserId(null);
+      await refresh();
+    } catch {
+      /* error toast from API client interceptor */
+    } finally {
+      setSavingRoles(false);
+    }
   }
 
   async function toggleActive(u) {
@@ -112,8 +166,12 @@ export default function Users() {
         display_name: u.displayName || '',
         is_active: !u.isActive,
         role_ids: u.roleIds || [],
+        partner_id: u.partnerId ?? null,
       });
+      toastSuccess(`${u.username} is now ${u.isActive ? 'inactive' : 'active'}.`);
       await refresh();
+    } catch {
+      /* error toast from API client interceptor */
     } finally {
       setToggleBusyId(null);
     }
@@ -121,13 +179,19 @@ export default function Users() {
 
   async function remove(id) {
     if (!confirm('Delete user?')) return;
-    await api.delete(`/admin/users/${id}`);
-    if (identityEditId === id) {
-      setIdentityEditId(null);
-      setIdentityForm(emptyIdentity);
+    const row = rows.find((x) => x.id === id);
+    try {
+      await api.delete(`/admin/users/${id}`);
+      toastSuccess(row ? `User ${row.username} was deleted.` : 'User deleted.');
+      if (identityEditId === id) {
+        setIdentityEditId(null);
+        setIdentityForm(emptyIdentity);
+      }
+      if (rolePanelUserId === id) setRolePanelUserId(null);
+      await refresh();
+    } catch {
+      /* error toast from API client interceptor */
     }
-    if (rolePanelUserId === id) setRolePanelUserId(null);
-    await refresh();
   }
 
   function openProfileEdit(u) {
@@ -139,6 +203,7 @@ export default function Users() {
       password: '',
       display_name: u.displayName || '',
       useEmailAsUsername: u.email === u.username,
+      partner_id: u.partnerId != null ? String(u.partnerId) : '',
     });
   }
 
@@ -195,23 +260,55 @@ export default function Users() {
             />
           </label>
           <label>
+            Partner
+            {user?.partnerId ? (
+              <p className="muted" style={{ margin: '4px 0 0', fontSize: 13 }}>
+                Users you create are assigned to <strong>{user.partnerName || `partner #${user.partnerId}`}</strong>.
+              </p>
+            ) : (
+              <>
+                <select
+                  value={identityForm.partner_id}
+                  onChange={(e) => setIdentityForm({ ...identityForm, partner_id: e.target.value })}
+                >
+                  <option value="">None (global administrator)</option>
+                  {partners.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                  Assign a partner so the user only sees that partner&apos;s projects on the portal and in admin.
+                </span>
+              </>
+            )}
+          </label>
+          <label>
             Password {identityEditId && <span className="muted">(leave blank to keep)</span>}
             <input
               type="password"
               value={identityForm.password}
               onChange={(e) => setIdentityForm({ ...identityForm, password: e.target.value })}
               required={!identityEditId}
+              minLength={identityEditId ? undefined : 8}
               autoComplete="new-password"
             />
+            <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+              {identityEditId
+                ? 'If changing password, use at least 8 characters.'
+                : 'Required — minimum 8 characters.'}
+            </span>
           </label>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="submit" className="btn btn-primary">
-              {identityEditId ? 'Update user' : 'Create user'}
+            <button type="submit" className="btn btn-primary" disabled={savingIdentity}>
+              {savingIdentity ? 'Saving…' : identityEditId ? 'Update user' : 'Create user'}
             </button>
             {identityEditId && (
               <button
                 type="button"
                 className="btn btn-ghost"
+                disabled={savingIdentity}
                 onClick={() => {
                   setIdentityEditId(null);
                   setIdentityForm(emptyIdentity);
@@ -236,10 +333,10 @@ export default function Users() {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="btn btn-primary" onClick={() => saveRolePanel()}>
-              Save roles
+            <button type="button" className="btn btn-primary" disabled={savingRoles} onClick={() => saveRolePanel()}>
+              {savingRoles ? 'Saving…' : 'Save roles'}
             </button>
-            <button type="button" className="btn btn-ghost" onClick={() => setRolePanelUserId(null)}>
+            <button type="button" className="btn btn-ghost" disabled={savingRoles} onClick={() => setRolePanelUserId(null)}>
               Cancel
             </button>
           </div>
@@ -255,6 +352,7 @@ export default function Users() {
             <thead>
               <tr>
                 <th>User</th>
+                <th>Partner</th>
                 <th>Roles</th>
                 <th>Active</th>
                 <th />
@@ -269,6 +367,7 @@ export default function Users() {
                       {u.email}
                     </div>
                   </td>
+                  <td>{u.partnerName || '—'}</td>
                   <td>{(u.roleSlugs || []).join(', ') || '—'}</td>
                   <td>
                     <ToggleSwitch

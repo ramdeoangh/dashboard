@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
 
   const loadMe = useCallback(async (token) => {
     if (token) setAccessToken(token);
-    const { data } = await api.get('/auth/me');
+    const { data } = await api.get('/auth/me', { skipErrorToast: true });
     setUser(data.data.user);
   }, []);
 
@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
   }, [loadMe]);
 
   const login = async (username, password) => {
-    const { data } = await api.post('/auth/login', { username, password });
+    const { data } = await api.post('/auth/login', { username, password }, { skipErrorToast: true });
     const { accessToken, user: u, refreshToken } = data.data;
     if (refreshToken) setStoredRefreshToken(refreshToken);
     setAccessToken(accessToken);
@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     try {
       const rt = getStoredRefreshToken();
-      await api.post('/auth/logout', rt ? { refreshToken: rt } : {});
+      await api.post('/auth/logout', rt ? { refreshToken: rt } : {}, { skipErrorToast: true });
     } finally {
       clearStoredRefreshToken();
       setAccessToken(null);

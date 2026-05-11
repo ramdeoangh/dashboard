@@ -10,12 +10,16 @@ export function optionalAuth(req, res, next) {
   const token = h.slice(7);
   try {
     const decoded = verifyAccessToken(token);
+    const pid = decoded.partnerId;
+    const partnerId =
+      pid != null && pid !== '' && Number.isFinite(Number(pid)) && Number(pid) > 0 ? Number(pid) : null;
     req.auth = {
       userId: decoded.sub,
       username: decoded.username,
       displayName: decoded.displayName,
       roles: decoded.roles || [],
       permissions: decoded.permissions || [],
+      partnerId,
     };
   } catch {
     /* ignore */
@@ -31,12 +35,16 @@ export function requireAuth(req, res, next) {
   const token = h.slice(7);
   try {
     const decoded = verifyAccessToken(token);
+    const pid = decoded.partnerId;
+    const partnerId =
+      pid != null && pid !== '' && Number.isFinite(Number(pid)) && Number(pid) > 0 ? Number(pid) : null;
     req.auth = {
       userId: decoded.sub,
       username: decoded.username,
       displayName: decoded.displayName,
       roles: decoded.roles || [],
       permissions: decoded.permissions || [],
+      partnerId,
     };
     return next();
   } catch {

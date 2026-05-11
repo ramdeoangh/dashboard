@@ -145,6 +145,7 @@ function mapRow(row) {
     updatedAt: row.updated_at,
     createdBy: row.created_by,
     updatedBy: row.updated_by,
+    partnerId: row.partner_id != null ? Number(row.partner_id) : null,
   };
 }
 
@@ -179,11 +180,15 @@ async function assertCategory(categoryId) {
   return rows.length > 0;
 }
 
-function buildListWhere({ stateId, locationId, q, includeInactive, forPortal, pendingApproval }) {
+function buildListWhere({ stateId, locationId, q, includeInactive, forPortal, pendingApproval, partnerId }) {
   const clauses = ['1=1'];
   const params = [];
   if (!includeInactive) {
     clauses.push('p.status = 1');
+  }
+  if (partnerId != null && Number(partnerId) > 0) {
+    clauses.push('p.partner_id = ?');
+    params.push(partnerId);
   }
   if (forPortal) {
     // Portal reports: show every submitted project (pending approval still visible).
@@ -271,8 +276,8 @@ export async function listProjectPhotos(projectId) {
  * for this project (status = 1), plus legacy column URLs when not already in the album.
  * Only requires an active project (status = 1), not is_submitted, so behaviour matches admin.
  */
-export async function getPortalProjectPhotos(projectId) {
-  const p = await getProjectById(projectId);
+export async function getPortalProjectPhotos(projectId, partnerScopeId = null) {
+  const p = await getProjectById(projectId, { partnerScopeId });
   if (!p || Number(p.status) !== 1) return null;
   const album = await listProjectPhotos(projectId);
   return mergeLegacyColumnPhotos(p, album);
@@ -317,7 +322,9 @@ export async function addProjectPhotoRows(projectId, kind, entries, userId) {
   await syncLegacyPhotoColumns(projectId, userId);
 }
 
-export async function deleteProjectPhoto(projectId, photoId, userId) {
+export async function deleteProjectPhoto(projectId, photoId, userId, partnerScopeId = null) {
+  const proj = await getProjectById(projectId, { partnerScopeId });
+  if (!proj) return false;
   const pool = getPool();
   const [rows] = await pool.execute(
     `SELECT * FROM project_photos WHERE id = ? AND project_id = ? AND status = 1 LIMIT 1`,
@@ -334,11 +341,18 @@ export async function deleteProjectPhoto(projectId, photoId, userId) {
   return true;
 }
 
-export async function getProjectById(id, { withPhotos = false } = {}) {
+export async function getProjectById(id, { withPhotos = false, partnerScopeId = null } = {}) {
   const pool = getPool();
   const [rows] = await pool.execute(`${baseSelect} WHERE p.id = ? LIMIT 1`, [id]);
   const mapped = mapRow(rows[0]);
   if (!mapped) return null;
+  if (
+    partnerScopeId != null &&
+    Number(partnerScopeId) > 0 &&
+    Number(mapped.partnerId) !== Number(partnerScopeId)
+  ) {
+    return null;
+  }
   if (withPhotos) {
     const photos = await listProjectPhotos(id);
     mapped.beforePhotos = photos.filter((x) => x.kind === 'before');
@@ -347,7 +361,7 @@ export async function getProjectById(id, { withPhotos = false } = {}) {
   return mapped;
 }
 
-export async function createProject(body, createdBy) {
+export async function createProject(body, createdBy, partnerId) {
   const {
     project_name,
     procurement_name,
@@ -364,6 +378,8 @@ export async function createProject(body, createdBy) {
     location_id,
     category_id,
   } = body;
+  const pid = Number(partnerId);
+  if (!Number.isInteger(pid) || pid <= 0) throw new AppError(400, 'Invalid partner for project');
   const start_year = yearFromStartDateString(start_date);
   if (!start_date || !end_date) throw new AppError(400, 'start_date and end_date are required');
   if (String(end_date) < String(start_date)) throw new AppError(400, 'end_date must be on or after start_date');
@@ -376,8 +392,8 @@ export async function createProject(body, createdBy) {
     `INSERT INTO projects (
       project_name, procurement_name, address, beneficiary_details, description, city, pincode,
       procurement_type, contact_number, start_date, end_date, start_year,
-      category_id, state_id, location_id, created_by, updated_by
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      category_id, state_id, location_id, partner_id, created_by, updated_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       project_name,
       procurement_name ?? '',
@@ -394,6 +410,7 @@ export async function createProject(body, createdBy) {
       category_id,
       state_id,
       location_id,
+      pid,
       createdBy || null,
       createdBy || null,
     ]
@@ -401,8 +418,8 @@ export async function createProject(body, createdBy) {
   return r.insertId;
 }
 
-export async function updateProject(id, body, updatedBy) {
-  const existing = await getProjectById(id);
+export async function updateProject(id, body, updatedBy, partnerScopeId = null) {
+  const existing = await getProjectById(id, { partnerScopeId });
   if (!existing) return null;
   if (existing.status === 0) throw new AppError(400, 'Project is deleted');
 
@@ -474,12 +491,12 @@ export async function updateProject(id, body, updatedBy) {
       id,
     ]
   );
-  return getProjectById(id);
+  return getProjectById(id, { partnerScopeId });
 }
 
 /** Legacy PUT body oldPhoto/newPhoto — appends rows like multipart POST; does not replace the album. */
-export async function setProjectPhotoPaths(id, { old_photo_path, new_photo_path }, updatedBy) {
-  const existing = await getProjectById(id);
+export async function setProjectPhotoPaths(id, { old_photo_path, new_photo_path }, updatedBy, partnerScopeId = null) {
+  const existing = await getProjectById(id, { partnerScopeId });
   if (!existing) return null;
   if (existing.status === 0) throw new AppError(400, 'Project is deleted');
   if (old_photo_path !== undefined) {
@@ -488,7 +505,7 @@ export async function setProjectPhotoPaths(id, { old_photo_path, new_photo_path 
   if (new_photo_path !== undefined) {
     await addProjectPhotoRows(id, 'after', [{ file_path: new_photo_path, original_name: null }], updatedBy);
   }
-  return getProjectById(id);
+  return getProjectById(id, { partnerScopeId });
 }
 
 async function countActivePhotos(projectId, kind) {
@@ -500,8 +517,8 @@ async function countActivePhotos(projectId, kind) {
   return c;
 }
 
-export async function submitProject(id, updatedBy) {
-  const p = await getProjectById(id);
+export async function submitProject(id, updatedBy, partnerScopeId = null) {
+  const p = await getProjectById(id, { partnerScopeId });
   if (!p) throw new AppError(404, 'Project not found');
   if (p.status === 0) throw new AppError(400, 'Project is deleted');
   if (p.isSubmitted) throw new AppError(400, 'Project already submitted');
@@ -521,11 +538,11 @@ export async function submitProject(id, updatedBy) {
     `UPDATE projects SET is_submitted = 1, updated_by = ? WHERE id = ? AND status = 1`,
     [updatedBy || null, id]
   );
-  return getProjectById(id);
+  return getProjectById(id, { partnerScopeId });
 }
 
-export async function updateApproval(id, { is_approved, approval_comment }, userId) {
-  const p = await getProjectById(id);
+export async function updateApproval(id, { is_approved, approval_comment }, userId, partnerScopeId = null) {
+  const p = await getProjectById(id, { partnerScopeId });
   if (!p) throw new AppError(404, 'Project not found');
   if (p.status === 0) throw new AppError(400, 'Project is deleted');
   if (!p.isSubmitted) throw new AppError(400, 'Project is not submitted for approval');
@@ -549,11 +566,11 @@ export async function updateApproval(id, { is_approved, approval_comment }, user
       id,
     ]
   );
-  return getProjectById(id);
+  return getProjectById(id, { partnerScopeId });
 }
 
-export async function softDeleteProject(id, updatedBy) {
-  const p = await getProjectById(id);
+export async function softDeleteProject(id, updatedBy, partnerScopeId = null) {
+  const p = await getProjectById(id, { partnerScopeId });
   if (!p) return false;
   const pool = getPool();
   await pool.execute(`UPDATE projects SET status = 0, updated_by = ? WHERE id = ?`, [updatedBy || null, id]);

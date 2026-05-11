@@ -5,19 +5,17 @@ import { mediaUrlFromApi } from '../../config.js';
 export default function PhotoAlbumModal({ projectId, kind, title, onClose }) {
   const [photos, setPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      setErr('');
       try {
         const { data } = await api.get(`/admin/projects/${projectId}/photos`);
         const list = (data.data || []).filter((p) => p.kind === kind);
         if (!cancelled) setPhotos(list.map((p) => ({ ...p, url: mediaUrlFromApi(p.url) })));
-      } catch (e) {
-        if (!cancelled) setErr(e.response?.data?.error || 'Failed to load photos');
+      } catch {
+        if (!cancelled) setPhotos([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -37,8 +35,7 @@ export default function PhotoAlbumModal({ projectId, kind, title, onClose }) {
           </button>
         </div>
         {loading && <p className="muted">Loading…</p>}
-        {err && <p style={{ color: 'var(--danger)' }}>{err}</p>}
-        {!loading && !photos.length && <p className="muted">No photos.</p>}
+        {!loading && !photos.length && <p className="muted">No photos in this album.</p>}
         <div className="album-grid">
           {photos.map((p) => (
             <figure key={p.id} className="album-item">

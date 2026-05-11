@@ -14,13 +14,12 @@ export default function PortalDashboard() {
   const [stateId, setStateId] = useState('');
   const [locationId, setLocationId] = useState('');
   const [textQ, setTextQ] = useState('');
-  const [err, setErr] = useState('');
+  const [bootstrapFailed, setBootstrapFailed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingProj, setLoadingProj] = useState(false);
 
   async function loadProjects() {
     setLoadingProj(true);
-    setErr('');
     try {
       const params = {};
       if (stateId) params.stateId = stateId;
@@ -29,8 +28,8 @@ export default function PortalDashboard() {
       if (q) params.q = q;
       const { data } = await api.get('/portal/projects', { params });
       setProjects(data.data || []);
-    } catch (e) {
-      setErr(e.response?.data?.error || 'Failed to load projects');
+    } catch {
+      /* error toast from API client */
     } finally {
       setLoadingProj(false);
     }
@@ -49,8 +48,8 @@ export default function PortalDashboard() {
         setBoot(b.data.data);
         setStats(s.data.data);
         setStates(st.data.data || []);
-      } catch (e) {
-        if (!cancelled) setErr(e.response?.data?.error || 'Failed to load');
+      } catch {
+        if (!cancelled) setBootstrapFailed(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -90,7 +89,13 @@ export default function PortalDashboard() {
   }, [stateId]);
 
   if (loading) return <Spinner />;
-  if (err && !boot) return <p style={{ color: 'var(--danger)' }}>{err}</p>;
+  if (bootstrapFailed && !boot) {
+    return (
+      <p className="muted" style={{ marginTop: 8 }}>
+        Unable to load the dashboard. Use the message shown above, or refresh and sign in again.
+      </p>
+    );
+  }
 
   const kpis = [
     { value: stats?.totalProjects ?? 0, label: 'Total project', valClass: 'teal' },
@@ -101,25 +106,13 @@ export default function PortalDashboard() {
 
   return (
     <div>
-      <div
-        className="card portal-title-card"
-        style={{
-          marginBottom: 0,
-          borderRadius: '8px 8px 0 0',
-          borderBottom: 'none',
-          textAlign: 'center',
-          padding: '20px 16px',
-        }}
-      >
-        <h1 className="page-title portal-title-h1" style={{ margin: 0 }}>
-          {boot?.portalName || 'Portal'}
-        </h1>
+      <div style={{ marginBottom: 16 }}>
+        <KpiStrip items={kpis} />
       </div>
-      <KpiStrip items={kpis} />
 
       <div
         className="filterbar card portal-filters"
-        style={{ marginTop: 0, borderRadius: '0 0 var(--radius) var(--radius)', borderTop: 'none' }}
+        style={{ borderRadius: 'var(--radius)' }}
       >
         <div
           style={{
@@ -179,8 +172,6 @@ export default function PortalDashboard() {
           </button>
         </div>
       </div>
-
-      {err && <p style={{ color: 'var(--danger)', marginTop: 12 }}>{err}</p>}
 
       <div className="card" style={{ marginTop: 16 }}>
         <h2 className="page-title" style={{ fontSize: '1.05rem' }}>

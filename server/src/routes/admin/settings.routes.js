@@ -13,6 +13,7 @@ router.use(requireAuth);
 const patchSchema = z
   .object({
     'portal.name': z.string().max(200).optional(),
+    'portal.nav_title': z.string().max(200).optional(),
     'portal.header_html': z.string().max(50000).optional(),
     'portal.footer_html': z.string().max(50000).optional(),
     'email.smtp_host': z.string().max(255).optional(),

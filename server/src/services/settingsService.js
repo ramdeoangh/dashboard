@@ -2,6 +2,7 @@ import { getPool } from '../config/database.js';
 
 const KEYS = new Set([
   'portal.name',
+  'portal.nav_title',
   'portal.logo_path',
   'portal.header_html',
   'portal.footer_html',
@@ -31,6 +32,7 @@ export async function getPublicPortalSettings() {
   const all = await getAllSettings();
   return {
     portalName: all['portal.name'] ?? 'Portal',
+    navTitle: all['portal.nav_title'] ?? 'Project Report',
     logoPath: all['portal.logo_path'] ?? null,
     headerHtml: all['portal.header_html'] ?? '',
     footerHtml: all['portal.footer_html'] ?? '',

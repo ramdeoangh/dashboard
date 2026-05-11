@@ -79,7 +79,7 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (!isAdminNav) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/portal" replace />;
   }
 
   const nav = (user?.adminNav || []).filter((m) => m.slug !== 'dashboard');
@@ -112,7 +112,7 @@ export default function AdminLayout() {
           ))}
         </nav>
         <div className="side-foot">
-          <Link to="/" title="Portal">
+          <Link to="/portal" title="Portal">
             <span className="nav-ico" aria-hidden>
               ←
             </span>
@@ -124,7 +124,7 @@ export default function AdminLayout() {
         <header className="admin-top">
           <div className="admin-top-start">
                      <a
-              href={`${typeof window !== 'undefined' ? window.location.origin : ''}/`}
+              href={`${typeof window !== 'undefined' ? window.location.origin : ''}/portal`}
               target="_blank"
               rel="noopener noreferrer"
               className="icon-link admin-top-bar-btn"

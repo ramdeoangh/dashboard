@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import api from '../../api/client.js';
 import Spinner from '../../components/Spinner.jsx';
+import { toastSuccess } from '../../toastBus.js';
 
 export default function SettingsEmail() {
   const [s, setS] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -22,7 +22,6 @@ export default function SettingsEmail() {
   async function save(e) {
     e.preventDefault();
     setSaving(true);
-    setMsg('');
     try {
       await api.patch('/admin/settings', {
         'email.smtp_host': s['email.smtp_host'],
@@ -32,9 +31,9 @@ export default function SettingsEmail() {
         'email.from_address': s['email.from_address'],
         'email.smtp_pass': s['email.smtp_pass'],
       });
-      setMsg('Saved.');
-    } catch (err) {
-      setMsg(err.response?.data?.error || 'Save failed');
+      toastSuccess('Email settings saved.');
+    } catch {
+      /* error toast from API client */
     } finally {
       setSaving(false);
     }
@@ -83,7 +82,6 @@ export default function SettingsEmail() {
             <option value="true">Yes</option>
           </select>
         </label>
-        {msg && <p className="muted">{msg}</p>}
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </button>

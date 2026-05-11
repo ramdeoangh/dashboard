@@ -7,19 +7,31 @@ import * as stateService from '../services/stateService.js';
 import * as locationService from '../services/locationService.js';
 import * as projectService from '../services/projectService.js';
 import * as statsService from '../services/statsService.js';
+import * as partnerService from '../services/partnerService.js';
 import { toPublicUrl } from '../utils/uploadPath.js';
+import { requireAuth } from '../middleware/auth.js';
+import { actorPartnerId } from '../utils/partnerScope.js';
 
 const router = Router();
+router.use(requireAuth);
 
 router.get(
   '/bootstrap',
   asyncHandler(async (req, res) => {
     const portal = await settingsService.getPublicPortalSettings();
+    const pid = actorPartnerId(req.auth);
+    let headerLogoUrl = toPublicUrl(portal.logoPath);
+    if (pid) {
+      const p = await partnerService.getPartnerById(pid);
+      if (p?.logoUrl) headerLogoUrl = p.logoUrl;
+    }
     res.json({
       success: true,
       data: {
         portalName: portal.portalName,
+        navTitle: portal.navTitle,
         logoUrl: toPublicUrl(portal.logoPath),
+        headerLogoUrl,
         headerHtml: portal.headerHtml,
         footerHtml: portal.footerHtml,
       },
@@ -68,7 +80,7 @@ router.get(
   validateQuery(photoListQuery),
   asyncHandler(async (req, res) => {
     const { projectId } = req.validated.query;
-    const photos = await projectService.getPortalProjectPhotos(projectId);
+    const photos = await projectService.getPortalProjectPhotos(projectId, actorPartnerId(req.auth));
     if (photos === null) throw new AppError(404, 'Project not found');
     res.json({ success: true, data: photos });
   })
@@ -78,7 +90,7 @@ router.get(
   '/projects/:id/photos',
   validateParams(projectIdParam),
   asyncHandler(async (req, res) => {
-    const photos = await projectService.getPortalProjectPhotos(req.validated.params.id);
+    const photos = await projectService.getPortalProjectPhotos(req.validated.params.id, actorPartnerId(req.auth));
     if (photos === null) throw new AppError(404, 'Project not found');
     res.json({ success: true, data: photos });
   })
@@ -89,7 +101,13 @@ router.get(
   validateQuery(projQuery),
   asyncHandler(async (req, res) => {
     const { stateId, locationId, q } = req.validated.query;
-    const rows = await projectService.listProjects({ stateId, locationId, q, forPortal: true });
+    const rows = await projectService.listProjects({
+      stateId,
+      locationId,
+      q,
+      forPortal: true,
+      partnerId: actorPartnerId(req.auth),
+    });
     res.json({ success: true, data: rows });
   })
 );
@@ -97,7 +115,7 @@ router.get(
 router.get(
   '/stats',
   asyncHandler(async (req, res) => {
-    const data = await statsService.portalStats();
+    const data = await statsService.portalStats(actorPartnerId(req.auth));
     res.json({ success: true, data });
   })
 );

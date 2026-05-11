@@ -6,9 +6,15 @@ import { validateBody, validateParams, validateQuery } from '../../middleware/va
 import { createProjectImageUploader } from '../../middleware/upload.js';
 import * as projectService from '../../services/projectService.js';
 import { relativeFromMulter } from '../../utils/uploadPath.js';
+import { resolveProjectPartnerIdForCreate } from '../../utils/partnerScope.js';
 
 const router = Router();
 router.use(requireAuth);
+
+function partnerScopeFromReq(req) {
+  const p = req.auth?.partnerId;
+  return p != null && Number.isFinite(Number(p)) && Number(p) > 0 ? Number(p) : null;
+}
 
 const idParam = z.object({ id: z.coerce.number().int().positive() });
 
@@ -44,6 +50,7 @@ const step1Body = z
     state_id: z.number().int().positive(),
     location_id: z.number().int().positive(),
     category_id: z.number().int().positive(),
+    partner_id: z.number().int().positive().optional(),
   })
   .refine((d) => d.end_date >= d.start_date, {
     message: 'End date must be on or after start date',
@@ -97,7 +104,7 @@ const upload = createProjectImageUploader();
 async function attachProjectUploadContext(req, res, next) {
   try {
     const id = req.validated?.params?.id ?? Number(req.params.id);
-    const row = await projectService.getProjectById(id);
+    const row = await projectService.getProjectById(id, { partnerScopeId: partnerScopeFromReq(req) });
     if (!row) {
       next(new AppError(404, 'Project not found'));
       return;
@@ -115,7 +122,13 @@ router.get(
   validateQuery(listQuery),
   asyncHandler(async (req, res) => {
     const { stateId, locationId, q, includeInactive } = req.validated.query;
-    const data = await projectService.listProjects({ stateId, locationId, q, includeInactive });
+    const data = await projectService.listProjects({
+      stateId,
+      locationId,
+      q,
+      includeInactive,
+      partnerId: partnerScopeFromReq(req),
+    });
     res.json({ success: true, data });
   })
 );
@@ -126,7 +139,12 @@ router.get(
   validateQuery(pendingListQuery),
   asyncHandler(async (req, res) => {
     const { stateId, locationId, q } = req.validated.query;
-    const data = await projectService.listPendingApproval({ stateId, locationId, q });
+    const data = await projectService.listPendingApproval({
+      stateId,
+      locationId,
+      q,
+      partnerId: partnerScopeFromReq(req),
+    });
     res.json({ success: true, data });
   })
 );
@@ -136,7 +154,8 @@ router.get(
   requirePermission('projects.view'),
   validateParams(idParam),
   asyncHandler(async (req, res) => {
-    const row = await projectService.getProjectById(req.validated.params.id);
+    const scope = partnerScopeFromReq(req);
+    const row = await projectService.getProjectById(req.validated.params.id, { partnerScopeId: scope });
     if (!row) throw new AppError(404, 'Project not found');
     const data = await projectService.listProjectPhotos(req.validated.params.id);
     res.json({ success: true, data });
@@ -149,9 +168,10 @@ router.delete(
   validateParams(photoIdParam),
   asyncHandler(async (req, res) => {
     const { id, photoId } = req.validated.params;
-    const p = await projectService.getProjectById(id);
+    const scope = partnerScopeFromReq(req);
+    const p = await projectService.getProjectById(id, { partnerScopeId: scope });
     if (!p) throw new AppError(404, 'Project not found');
-    const ok = await projectService.deleteProjectPhoto(id, photoId, req.auth.userId);
+    const ok = await projectService.deleteProjectPhoto(id, photoId, req.auth.userId, scope);
     if (!ok) throw new AppError(404, 'Photo not found');
     res.json({ success: true });
   })
@@ -174,7 +194,8 @@ router.post(
   }),
   asyncHandler(async (req, res) => {
     const id = req.validated.params.id;
-    const existing = await projectService.getProjectById(id);
+    const scope = partnerScopeFromReq(req);
+    const existing = await projectService.getProjectById(id, { partnerScopeId: scope });
     if (!existing) throw new AppError(404, 'Project not found');
     if (existing.status === 0) throw new AppError(400, 'Project is deleted');
     const files = req.files || {};
@@ -197,7 +218,7 @@ router.post(
       }));
       await projectService.addProjectPhotoRows(id, 'after', entries, req.auth.userId);
     }
-    const row = await projectService.getProjectById(id);
+    const row = await projectService.getProjectById(id, { partnerScopeId: scope });
     res.json({ success: true, data: row });
   })
 );
@@ -207,7 +228,10 @@ router.get(
   requirePermission('projects.view'),
   validateParams(idParam),
   asyncHandler(async (req, res) => {
-    const row = await projectService.getProjectById(req.validated.params.id, { withPhotos: true });
+    const row = await projectService.getProjectById(req.validated.params.id, {
+      withPhotos: true,
+      partnerScopeId: partnerScopeFromReq(req),
+    });
     if (!row) throw new AppError(404, 'Project not found');
     res.json({ success: true, data: row });
   })
@@ -218,7 +242,11 @@ router.post(
   requirePermission('projects.create'),
   validateBody(step1Body),
   asyncHandler(async (req, res) => {
-    const id = await projectService.createProject(req.validated.body, req.auth.userId);
+    const partnerId = resolveProjectPartnerIdForCreate(req.auth, req.validated.body.partner_id);
+    if (!partnerId) {
+      throw new AppError(400, 'partner_id is required when creating a project as a global administrator');
+    }
+    const id = await projectService.createProject(req.validated.body, req.auth.userId, partnerId);
     res.status(201).json({ success: true, data: { id } });
   })
 );
@@ -229,7 +257,12 @@ router.patch(
   validateParams(idParam),
   validateBody(patchBody),
   asyncHandler(async (req, res) => {
-    const row = await projectService.updateProject(req.validated.params.id, req.validated.body, req.auth.userId);
+    const row = await projectService.updateProject(
+      req.validated.params.id,
+      req.validated.body,
+      req.auth.userId,
+      partnerScopeFromReq(req)
+    );
     if (!row) throw new AppError(404, 'Project not found');
     res.json({ success: true, data: row });
   })
@@ -240,7 +273,11 @@ router.post(
   requirePermission('projects.edit'),
   validateParams(idParam),
   asyncHandler(async (req, res) => {
-    const row = await projectService.submitProject(req.validated.params.id, req.auth.userId);
+    const row = await projectService.submitProject(
+      req.validated.params.id,
+      req.auth.userId,
+      partnerScopeFromReq(req)
+    );
     res.json({ success: true, data: row });
   })
 );
@@ -254,7 +291,8 @@ router.patch(
     const row = await projectService.updateApproval(
       req.validated.params.id,
       req.validated.body,
-      req.auth.userId
+      req.auth.userId,
+      partnerScopeFromReq(req)
     );
     res.json({ success: true, data: row });
   })
@@ -277,7 +315,8 @@ router.put(
   }),
   asyncHandler(async (req, res) => {
     const id = req.validated.params.id;
-    const existing = await projectService.getProjectById(id);
+    const scope = partnerScopeFromReq(req);
+    const existing = await projectService.getProjectById(id, { partnerScopeId: scope });
     if (!existing) throw new AppError(404, 'Project not found');
     if (existing.status === 0) throw new AppError(400, 'Project is deleted');
     const files = req.files || {};
@@ -289,7 +328,7 @@ router.put(
     const patch = {};
     if (oldF) patch.old_photo_path = relativeFromMulter(oldF);
     if (newF) patch.new_photo_path = relativeFromMulter(newF);
-    const row = await projectService.setProjectPhotoPaths(id, patch, req.auth.userId);
+    const row = await projectService.setProjectPhotoPaths(id, patch, req.auth.userId, scope);
     res.json({ success: true, data: row });
   })
 );
@@ -299,7 +338,11 @@ router.delete(
   requirePermission('projects.delete'),
   validateParams(idParam),
   asyncHandler(async (req, res) => {
-    const ok = await projectService.softDeleteProject(req.validated.params.id, req.auth.userId);
+    const ok = await projectService.softDeleteProject(
+      req.validated.params.id,
+      req.auth.userId,
+      partnerScopeFromReq(req)
+    );
     if (!ok) throw new AppError(404, 'Project not found');
     res.json({ success: true });
   })

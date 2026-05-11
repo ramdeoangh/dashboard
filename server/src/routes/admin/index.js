@@ -8,6 +8,7 @@ import projectsRoutes from './projects.routes.js';
 import projectCategoriesRoutes from './projectCategories.routes.js';
 import usersRoutes from './users.routes.js';
 import rolesRoutes from './roles.routes.js';
+import partnersRoutes from './partners.routes.js';
 import statsRoutes from './stats.routes.js';
 import applicationLogsRoutes from './applicationLogs.routes.js';
 
@@ -22,6 +23,7 @@ router.use('/locations', locationsRoutes);
 router.use('/projects', projectsRoutes);
 router.use('/project-categories', projectCategoriesRoutes);
 router.use('/users', usersRoutes);
+router.use('/partners', partnersRoutes);
 router.use('/roles', rolesRoutes);
 router.use('/stats', statsRoutes);
 

@@ -1,10 +1,8 @@
-CREATE DATABASE  IF NOT EXISTS `project_dashboard` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `project_dashboard`;
--- MySQL dump 10.13  Distrib 8.0.45, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.44, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: project_dashboard
 -- ------------------------------------------------------
--- Server version	8.0.42
+-- Server version	8.0.44
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -26,17 +24,17 @@ DROP TABLE IF EXISTS `application_logs`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `application_logs` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `correlation_id` char(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `level` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `message` varchar(1000) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `correlation_id` char(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `level` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `meta` json DEFAULT NULL,
-  `method` varchar(12) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `method` varchar(12) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status_code` smallint unsigned DEFAULT NULL,
   `duration_ms` int unsigned DEFAULT NULL,
   `user_id` int unsigned DEFAULT NULL,
-  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_agent` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ip` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_app_logs_created` (`created_at`),
@@ -67,8 +65,8 @@ DROP TABLE IF EXISTS `locations`;
 CREATE TABLE `locations` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `state_id` int unsigned NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `sort_order` int NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -83,7 +81,7 @@ CREATE TABLE `locations` (
   CONSTRAINT `fk_loc_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_loc_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_locations_state` FOREIGN KEY (`state_id`) REFERENCES `states` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -119,7 +117,7 @@ CREATE TABLE `menu_roles` (
 
 LOCK TABLES `menu_roles` WRITE;
 /*!40000 ALTER TABLE `menu_roles` DISABLE KEYS */;
-INSERT INTO `menu_roles` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(13,1),(1,2),(2,2),(3,2),(4,2),(5,2),(13,2),(1,3),(2,3);
+INSERT INTO `menu_roles` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(13,1),(1,2),(2,2),(3,2),(4,2),(5,2),(13,2),(1,3),(2,3),(1,7),(2,7);
 /*!40000 ALTER TABLE `menu_roles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -132,10 +130,10 @@ DROP TABLE IF EXISTS `menus`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `menus` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `icon` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `icon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `sort_order` int NOT NULL DEFAULT '0',
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -148,7 +146,7 @@ CREATE TABLE `menus` (
   KEY `fk_menus_updated_by` (`updated_by`),
   CONSTRAINT `fk_menus_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_menus_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -157,7 +155,7 @@ CREATE TABLE `menus` (
 
 LOCK TABLES `menus` WRITE;
 /*!40000 ALTER TABLE `menus` DISABLE KEYS */;
-INSERT INTO `menus` VALUES (1,'Dashboard','dashboard','/admin','layout-dashboard',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Projects','projects','#','briefcase',10,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'Users & Roles','users-roles','#','users',20,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(4,'Masters','masters','#','map',30,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(5,'Settings','settings','#','settings',100,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,'Content','content','#','folder',999,0,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(13,'Website setting','menu-website','#','settings',90,1,'2026-04-07 11:22:31','2026-04-07 11:32:18',NULL,NULL);
+INSERT INTO `menus` VALUES (1,'Dashboard','dashboard','/admin','layout-dashboard',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Projects','projects','#','briefcase',10,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'Users & Roles','users-roles','#','users',20,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(4,'Masters','masters','#','map',30,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(5,'Settings','settings','#','settings',100,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,'Content','content','#','folder',999,0,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(13,'Menu','menu-website','#','settings',90,1,'2026-04-07 11:22:31','2026-05-11 08:43:51',NULL,NULL);
 /*!40000 ALTER TABLE `menus` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -170,9 +168,9 @@ DROP TABLE IF EXISTS `pages`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pages` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `content` mediumtext COLLATE utf8mb4_unicode_ci,
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_published` tinyint(1) NOT NULL DEFAULT '0',
   `sort_order` int NOT NULL DEFAULT '0',
   `status` tinyint(1) NOT NULL DEFAULT '1',
@@ -186,7 +184,7 @@ CREATE TABLE `pages` (
   KEY `fk_pages_updated_by` (`updated_by`),
   CONSTRAINT `fk_pages_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_pages_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -200,6 +198,39 @@ INSERT INTO `pages` VALUES (1,'About','about','<p>About this portal.</p>',1,1,1,
 UNLOCK TABLES;
 
 --
+-- Table structure for table `partners`
+--
+
+DROP TABLE IF EXISTS `partners`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `partners` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `logo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `created_by` int unsigned DEFAULT NULL,
+  `updated_by` int unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_partners_slug` (`slug`),
+  KEY `idx_partners_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `partners`
+--
+
+LOCK TABLES `partners` WRITE;
+/*!40000 ALTER TABLE `partners` DISABLE KEYS */;
+INSERT INTO `partners` VALUES (1,'Default','default',NULL,1,'2026-05-11 07:48:24','2026-05-11 08:36:11',1,NULL),(2,'Acme Foundation','acme-foundation',NULL,1,'2026-05-11 08:35:12','2026-05-11 08:36:11',1,NULL),(4,'demo1','demo1',NULL,1,'2026-05-11 09:12:37','2026-05-11 09:14:17',1,1);
+/*!40000 ALTER TABLE `partners` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `permissions`
 --
 
@@ -208,10 +239,10 @@ DROP TABLE IF EXISTS `permissions`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `permissions` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `resource` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `resource` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -224,7 +255,7 @@ CREATE TABLE `permissions` (
   KEY `fk_perms_updated_by` (`updated_by`),
   CONSTRAINT `fk_perms_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_perms_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -233,7 +264,7 @@ CREATE TABLE `permissions` (
 
 LOCK TABLES `permissions` WRITE;
 /*!40000 ALTER TABLE `permissions` DISABLE KEYS */;
-INSERT INTO `permissions` VALUES (1,'Settings view','settings.view','settings','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Settings edit','settings.edit','settings','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'Users view','users.view','users','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(4,'Users create','users.create','users','create',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(5,'Users edit','users.edit','users','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,'Users delete','users.delete','users','delete',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'Roles view','roles.view','roles','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,'Roles edit','roles.edit','roles','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(9,'Menus view','menus.view','menus','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(10,'Menus edit','menus.edit','menus','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(11,'Pages view','pages.view','pages','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(12,'Pages edit','pages.edit','pages','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(13,'States view','states.view','states','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(14,'States edit','states.edit','states','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(15,'Projects view','projects.view','projects','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(16,'Projects create','projects.create','projects','create',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(17,'Projects edit','projects.edit','projects','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(18,'Projects delete','projects.delete','projects','delete',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(19,'Projects approve','projects.approve','projects','approve',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(20,'Categories view','categories.view','categories','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(21,'Categories edit','categories.edit','categories','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL);
+INSERT INTO `permissions` VALUES (1,'Settings view','settings.view','settings','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Settings edit','settings.edit','settings','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'Users view','users.view','users','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(4,'Users create','users.create','users','create',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(5,'Users edit','users.edit','users','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,'Users delete','users.delete','users','delete',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'Roles view','roles.view','roles','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,'Roles edit','roles.edit','roles','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(9,'Menus view','menus.view','menus','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(10,'Menus edit','menus.edit','menus','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(11,'Pages view','pages.view','pages','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(12,'Pages edit','pages.edit','pages','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(13,'States view','states.view','states','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(14,'States edit','states.edit','states','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(15,'Projects view','projects.view','projects','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(16,'Projects create','projects.create','projects','create',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(17,'Projects edit','projects.edit','projects','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(18,'Projects delete','projects.delete','projects','delete',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(19,'Projects approve','projects.approve','projects','approve',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(20,'Categories view','categories.view','categories','view',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(21,'Categories edit','categories.edit','categories','edit',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(45,'Partners view','partners.view','partners','view',1,'2026-05-11 08:39:15','2026-05-11 08:39:15',NULL,NULL),(46,'Partners edit','partners.edit','partners','edit',1,'2026-05-11 08:39:15','2026-05-11 08:39:15',NULL,NULL);
 /*!40000 ALTER TABLE `permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -246,8 +277,8 @@ DROP TABLE IF EXISTS `project_categories`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `project_categories` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -259,7 +290,7 @@ CREATE TABLE `project_categories` (
   KEY `fk_pc_updated_by` (`updated_by`),
   CONSTRAINT `fk_pc_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_pc_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -268,7 +299,7 @@ CREATE TABLE `project_categories` (
 
 LOCK TABLES `project_categories` WRITE;
 /*!40000 ALTER TABLE `project_categories` DISABLE KEYS */;
-INSERT INTO `project_categories` VALUES (1,'Generall','general',1,'2026-04-07 07:56:04','2026-04-07 08:12:19',NULL,1);
+INSERT INTO `project_categories` VALUES (1,'General','general',1,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,1);
 /*!40000 ALTER TABLE `project_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -282,9 +313,9 @@ DROP TABLE IF EXISTS `project_photos`;
 CREATE TABLE `project_photos` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `project_id` int unsigned NOT NULL,
-  `kind` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'before or after',
-  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `original_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `kind` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'before or after',
+  `file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `original_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `sort_order` int NOT NULL DEFAULT '0',
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -298,7 +329,7 @@ CREATE TABLE `project_photos` (
   CONSTRAINT `fk_pp_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_pp_project` FOREIGN KEY (`project_id`) REFERENCES `projects` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_pp_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -307,7 +338,7 @@ CREATE TABLE `project_photos` (
 
 LOCK TABLES `project_photos` WRITE;
 /*!40000 ALTER TABLE `project_photos` DISABLE KEYS */;
-INSERT INTO `project_photos` VALUES (1,1,'before','projects/1_MH_MH-MUM-PAX/before/1775549942933-tenz7bjdyrp.jpeg','WhatsApp Image 2026-03-04 at 1.52.46 PM.jpeg',0,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(2,1,'before','projects/1_MH_MH-MUM-PAX/before/1775549942939-16um3ut1kqp.jpeg','WhatsApp Image 2026-03-04 at 1.51.56 PM.jpeg',1,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(3,1,'before','projects/1_MH_MH-MUM-PAX/before/1775549942943-hdfgc24qtku.jpeg','WhatsApp Image 2026-03-04 at 4.50.48 PM.jpeg',2,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(4,1,'after','projects/1_MH_MH-MUM-PAX/after/1775549942947-a9k68qx6rbd.jpeg','WhatsApp Image 2025-12-03 at 2.38.55 PM.jpeg',0,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(5,1,'after','projects/1_MH_MH-MUM-PAX/after/1775549942947-ci8asrb74e.jpeg','WhatsApp Image 2025-12-01 at 6.05.03 PM.jpeg',1,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(6,1,'after','projects/1_MH_MH-MUM-PAX/after/1775549942949-ur9rad2uc5b.jpeg','WhatsApp Image 2025-12-01 at 6.01.56 PM.jpeg',2,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(7,2,'before','projects/2_KA_KA-BLR-PAX/before/1775559605443-nugimgazxt.gif','MO_duckhorn_new_1.gif',0,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(8,2,'before','projects/2_KA_KA-BLR-PAX/before/1775559605445-pde22dgscfq.gif','MO_duckhorn_new.gif',1,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(9,2,'before','projects/2_KA_KA-BLR-PAX/before/1775559605446-75r073ywql9.gif','Nate_Signature (1).gif',2,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(10,2,'after','projects/2_KA_KA-BLR-PAX/after/1775559605447-45wpuhxgbtx.jpeg','WhatsApp Image 2025-10-17 at 7.09.43 AM.jpeg',0,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(11,2,'after','projects/2_KA_KA-BLR-PAX/after/1775559605448-euvsibvakno.jpeg','WhatsApp Image 2025-10-14 at 10.42.27 AM.jpeg',1,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1);
+INSERT INTO `project_photos` VALUES (1,1,'before','projects/1_MH_MH-MUM-PAX/before/1775549942933-tenz7bjdyrp.jpeg','WhatsApp Image 2026-03-04 at 1.52.46 PM.jpeg',0,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(2,1,'before','projects/1_MH_MH-MUM-PAX/before/1775549942939-16um3ut1kqp.jpeg','WhatsApp Image 2026-03-04 at 1.51.56 PM.jpeg',1,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(3,1,'before','projects/1_MH_MH-MUM-PAX/before/1775549942943-hdfgc24qtku.jpeg','WhatsApp Image 2026-03-04 at 4.50.48 PM.jpeg',2,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(4,1,'after','projects/1_MH_MH-MUM-PAX/after/1775549942947-a9k68qx6rbd.jpeg','WhatsApp Image 2025-12-03 at 2.38.55 PM.jpeg',0,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(5,1,'after','projects/1_MH_MH-MUM-PAX/after/1775549942947-ci8asrb74e.jpeg','WhatsApp Image 2025-12-01 at 6.05.03 PM.jpeg',1,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(6,1,'after','projects/1_MH_MH-MUM-PAX/after/1775549942949-ur9rad2uc5b.jpeg','WhatsApp Image 2025-12-01 at 6.01.56 PM.jpeg',2,1,'2026-04-07 08:19:02','2026-04-07 08:19:02',1,1),(7,2,'before','projects/2_KA_KA-BLR-PAX/before/1775559605443-nugimgazxt.gif','MO_duckhorn_new_1.gif',0,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(8,2,'before','projects/2_KA_KA-BLR-PAX/before/1775559605445-pde22dgscfq.gif','MO_duckhorn_new.gif',1,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(9,2,'before','projects/2_KA_KA-BLR-PAX/before/1775559605446-75r073ywql9.gif','Nate_Signature (1).gif',2,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(10,2,'after','projects/2_KA_KA-BLR-PAX/after/1775559605447-45wpuhxgbtx.jpeg','WhatsApp Image 2025-10-17 at 7.09.43 AM.jpeg',0,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(11,2,'after','projects/2_KA_KA-BLR-PAX/after/1775559605448-euvsibvakno.jpeg','WhatsApp Image 2025-10-14 at 10.42.27 AM.jpeg',1,1,'2026-04-07 11:00:05','2026-04-07 11:00:05',1,1),(12,3,'before','3/before/1778492700791-bt2e0mz4pt.png','test.png',0,1,'2026-05-11 09:45:00','2026-05-11 09:45:00',1,1),(13,3,'after','3/after/1778492700794-68uojujsg2.jpg','WhatsApp Image 2025-11-11 at 10.53.59_34aa6c5f.jpg',0,1,'2026-05-11 09:45:00','2026-05-11 09:45:00',1,1);
 /*!40000 ALTER TABLE `project_photos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -320,30 +351,31 @@ DROP TABLE IF EXISTS `projects`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `projects` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `project_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `procurement_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `address` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `beneficiary_details` text COLLATE utf8mb4_unicode_ci,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `city` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `pincode` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `procurement_type` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `contact_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `project_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `procurement_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `address` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `beneficiary_details` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `city` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `pincode` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `procurement_type` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `contact_number` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `start_date` date DEFAULT NULL,
   `end_date` date DEFAULT NULL,
   `start_year` smallint unsigned DEFAULT NULL COMMENT 'Year of start_date; set on write',
-  `old_photo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `new_photo_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `workflow_status` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'in_progress' COMMENT 'in_progress, completed, blocked',
-  `block_reason` text COLLATE utf8mb4_unicode_ci,
+  `old_photo_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `new_photo_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `workflow_status` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'in_progress' COMMENT 'in_progress, completed, blocked',
+  `block_reason` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `is_submitted` tinyint(1) NOT NULL DEFAULT '0',
   `is_approved` tinyint(1) NOT NULL DEFAULT '0',
-  `approval_comment` text COLLATE utf8mb4_unicode_ci,
+  `approval_comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `approved_by` int unsigned DEFAULT NULL,
   `approved_at` timestamp NULL DEFAULT NULL,
   `category_id` int unsigned NOT NULL,
   `state_id` int unsigned NOT NULL,
   `location_id` int unsigned NOT NULL,
+  `partner_id` int unsigned NOT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 active, 0 soft-deleted',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -358,13 +390,15 @@ CREATE TABLE `projects` (
   KEY `idx_projects_status` (`status`),
   KEY `idx_projects_submitted` (`is_submitted`,`is_approved`),
   KEY `idx_projects_category` (`category_id`),
+  KEY `idx_projects_partner` (`partner_id`),
   CONSTRAINT `fk_projects_approved_by` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_projects_category` FOREIGN KEY (`category_id`) REFERENCES `project_categories` (`id`),
   CONSTRAINT `fk_projects_location` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
+  CONSTRAINT `fk_projects_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_projects_state` FOREIGN KEY (`state_id`) REFERENCES `states` (`id`),
   CONSTRAINT `fk_projects_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_projects_user` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -373,7 +407,7 @@ CREATE TABLE `projects` (
 
 LOCK TABLES `projects` WRITE;
 /*!40000 ALTER TABLE `projects` DISABLE KEYS */;
-INSERT INTO `projects` VALUES (1,'Smart Village Drinking Water Initiative','HCCB','No. 45, Panchayat Road, Near Government School','This project focuses on improving access to clean and safe drinking water in rural areas through installation of purification systems and pipeline networks.','The project aims to install water purification units and develop a sustainable water distribution pipeline system across the village. It includes maintenance planning and community training for long-term usage.','pune','232323','HCCB','9673728738','2025-11-07','2025-11-22',2025,'projects/1_MH_MH-MUM-PAX/before/1775549942933-tenz7bjdyrp.jpeg','projects/1_MH_MH-MUM-PAX/after/1775549942947-a9k68qx6rbd.jpeg','completed',NULL,1,1,NULL,1,'2026-04-07 08:30:17',1,14,1,1,'2026-04-07 08:18:24','2026-04-07 12:43:52',1,1),(2,'Urban Green Park Development Project','sadadasda','A-136,uday colony near akurdi railway station , gurudwara chowck\nwalhekarwadi','Beneficiary Details:\n\nTarget Group: Urban residents\nEstimated Beneficiaries: 10,000 people\nPrimary Beneficiaries: Families, children, fitness enthusiasts\nSecondary Beneficiaries: Local businesses and tourists','Description:\nThe project includes landscaping, tree plantation, jogging tracks, children\'s play areas, and installation of solar lighting. It also focuses on long-term maintenance and waste management systems.','pune','411033','sadadasda','9673728738','2025-11-07','2025-11-22',2025,'projects/2_KA_KA-BLR-PAX/before/1775559605443-nugimgazxt.gif','projects/2_KA_KA-BLR-PAX/after/1775559605447-45wpuhxgbtx.jpeg','completed',NULL,1,1,NULL,1,'2026-04-07 11:13:45',1,11,3,1,'2026-04-07 10:59:34','2026-04-07 12:43:52',1,1);
+INSERT INTO `projects` VALUES (1,'Smart Village Drinking Water Initiative','HCCB','No. 45, Panchayat Road, Near Government School','This project focuses on improving access to clean and safe drinking water in rural areas through installation of purification systems and pipeline networks.','The project aims to install water purification units and develop a sustainable water distribution pipeline system across the village. It includes maintenance planning and community training for long-term usage.','pune','232323','HCCB','9673728738','2025-11-07','2025-11-22',2025,'projects/1_MH_MH-MUM-PAX/before/1775549942933-tenz7bjdyrp.jpeg','projects/1_MH_MH-MUM-PAX/after/1775549942947-a9k68qx6rbd.jpeg','completed',NULL,1,1,NULL,1,'2026-04-07 08:30:17',1,14,1,1,1,'2026-04-07 08:18:24','2026-05-11 07:48:24',1,1),(2,'Urban Green Park Development Project','sadadasda','A-136,uday colony near akurdi railway station , gurudwara chowck\nwalhekarwadi','Beneficiary Details:\n\nTarget Group: Urban residents\nEstimated Beneficiaries: 10,000 people\nPrimary Beneficiaries: Families, children, fitness enthusiasts\nSecondary Beneficiaries: Local businesses and tourists','Description:\nThe project includes landscaping, tree plantation, jogging tracks, children\'s play areas, and installation of solar lighting. It also focuses on long-term maintenance and waste management systems.','pune','411033','sadadasda','9673728738','2025-11-07','2025-11-22',2025,'projects/2_KA_KA-BLR-PAX/before/1775559605443-nugimgazxt.gif','projects/2_KA_KA-BLR-PAX/after/1775559605447-45wpuhxgbtx.jpeg','completed',NULL,1,1,NULL,1,'2026-04-07 11:13:45',1,11,3,1,1,'2026-04-07 10:59:34','2026-05-11 07:48:24',1,1),(3,'demo','demo','sdafdsa','sdafdsa','dsafsaf','sadfas','321231','demo','9787678678','2025-12-09','2026-05-06',2025,'3/before/1778492700791-bt2e0mz4pt.png','3/after/1778492700794-68uojujsg2.jpg','completed',NULL,1,1,NULL,1,'2026-05-11 09:45:12',1,11,3,2,1,'2026-05-11 09:44:44','2026-05-11 09:45:12',1,1);
 /*!40000 ALTER TABLE `projects` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -387,7 +421,7 @@ DROP TABLE IF EXISTS `refresh_tokens`;
 CREATE TABLE `refresh_tokens` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int unsigned NOT NULL,
-  `token_hash` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `token_hash` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `expires_at` timestamp NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `revoked_at` timestamp NULL DEFAULT NULL,
@@ -395,7 +429,7 @@ CREATE TABLE `refresh_tokens` (
   KEY `idx_rt_user` (`user_id`),
   KEY `idx_rt_expires` (`expires_at`),
   CONSTRAINT `fk_rt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -404,7 +438,7 @@ CREATE TABLE `refresh_tokens` (
 
 LOCK TABLES `refresh_tokens` WRITE;
 /*!40000 ALTER TABLE `refresh_tokens` DISABLE KEYS */;
-INSERT INTO `refresh_tokens` VALUES (1,1,'959bb30e01e8b17d50c89a4f8274e38ad57726bfd7153bef7dbc58d4549a1760','2026-04-14 07:59:57','2026-04-07 07:59:57',NULL),(2,1,'75bdecbadd728ff2551c46ed5402ad10746820a6fa539df42bb5e7db7f9f7061','2026-04-14 10:56:44','2026-04-07 10:56:43','2026-04-07 12:54:51'),(3,1,'056767bffb63721dda52483df9a4fff2cb4b48f997730e1a09e45959c806fb45','2026-04-14 12:54:54','2026-04-07 12:54:53',NULL);
+INSERT INTO `refresh_tokens` VALUES (1,1,'959bb30e01e8b17d50c89a4f8274e38ad57726bfd7153bef7dbc58d4549a1760','2026-04-14 07:59:57','2026-04-07 07:59:57',NULL),(2,1,'75bdecbadd728ff2551c46ed5402ad10746820a6fa539df42bb5e7db7f9f7061','2026-04-14 10:56:44','2026-04-07 10:56:43','2026-04-07 12:54:51'),(3,1,'056767bffb63721dda52483df9a4fff2cb4b48f997730e1a09e45959c806fb45','2026-04-14 12:54:54','2026-04-07 12:54:53',NULL),(4,1,'02aff0f2cadfcb0f5f379caf88d13c2e0df34df4d368a3ac06cd542e8348ed55','2026-04-15 08:04:32','2026-04-08 08:04:32',NULL),(5,1,'33f1819855633498eb20137a5f1bc2e926fc23089a0439dba46d945c39f64f17','2026-05-18 07:51:38','2026-05-11 07:51:38','2026-05-11 08:04:08'),(6,1,'f7067023cca98e587fa63f3a6813caf1353ebd5079f5d6c2e6118b8d8da741c0','2026-05-18 08:04:27','2026-05-11 08:04:26','2026-05-11 08:07:35'),(7,2,'7872ea148b463fe8226229d23b91b3ef3fcd30542f20d60f82cd0b469968e551','2026-05-18 08:07:42','2026-05-11 08:07:41','2026-05-11 08:17:34'),(8,2,'f22ff4f9aab683bdd163f11cee8db7a875b3dae30d2888cfa3891ea36870b525','2026-05-18 08:17:51','2026-05-11 08:17:50','2026-05-11 08:27:18'),(9,1,'c700ce63da9848b58458ebd59e662b20554c041834501eac84c02752f8aa4571','2026-05-18 08:27:45','2026-05-11 08:27:44','2026-05-11 08:34:26'),(10,1,'6b5427df8cb7d2b62bc0e3a64ceee1fa4f5a70766edc3939b4be83bb1ba08d41','2026-05-18 08:34:41','2026-05-11 08:34:40',NULL),(11,1,'4f153a5c7a5a7e434b2106655f7047b4cd006d059c8b8da22dc2e6698b85c12b','2026-05-18 08:42:29','2026-05-11 08:42:28',NULL),(12,2,'c1688a2f5817f35b008937ee45593c8a6b0d4ed47239a191fa2ee875d6e35198','2026-05-18 09:46:01','2026-05-11 09:46:01','2026-05-11 09:46:48'),(13,2,'42f1e82ba683755ef0fdaa06984394526b216bb9cfd7022a979225f01031fdb8','2026-05-18 09:49:29','2026-05-11 09:49:29',NULL);
 /*!40000 ALTER TABLE `refresh_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -431,7 +465,7 @@ CREATE TABLE `role_permissions` (
 
 LOCK TABLES `role_permissions` WRITE;
 /*!40000 ALTER TABLE `role_permissions` DISABLE KEYS */;
-INSERT INTO `role_permissions` VALUES (1,1),(2,1),(1,2),(2,2),(1,3),(2,3),(1,4),(2,4),(1,5),(2,5),(1,6),(1,7),(2,7),(1,8),(1,9),(2,9),(3,9),(1,10),(2,10),(1,11),(2,11),(3,11),(1,12),(2,12),(1,13),(2,13),(1,14),(2,14),(1,15),(2,15),(3,15),(1,16),(2,16),(1,17),(2,17),(1,18),(2,18),(1,19),(2,19),(1,20),(2,20),(3,20),(1,21),(2,21);
+INSERT INTO `role_permissions` VALUES (1,1),(2,1),(1,2),(2,2),(1,3),(2,3),(1,4),(2,4),(1,5),(2,5),(1,6),(1,7),(2,7),(1,8),(1,9),(2,9),(3,9),(1,10),(2,10),(1,11),(2,11),(3,11),(1,12),(2,12),(1,13),(2,13),(7,13),(1,14),(2,14),(1,15),(2,15),(3,15),(7,15),(1,16),(2,16),(7,16),(1,17),(2,17),(7,17),(1,18),(2,18),(7,18),(1,19),(2,19),(1,20),(2,20),(3,20),(7,20),(1,21),(2,21),(1,45),(2,45),(7,45),(1,46),(2,46);
 /*!40000 ALTER TABLE `role_permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -444,9 +478,9 @@ DROP TABLE IF EXISTS `roles`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `roles` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -458,7 +492,7 @@ CREATE TABLE `roles` (
   KEY `fk_roles_updated_by` (`updated_by`),
   CONSTRAINT `fk_roles_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_roles_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -467,7 +501,7 @@ CREATE TABLE `roles` (
 
 LOCK TABLES `roles` WRITE;
 /*!40000 ALTER TABLE `roles` DISABLE KEYS */;
-INSERT INTO `roles` VALUES (1,'Super Admin','super_admin','Full system access',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Admin','admin','Manage content and users',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'Viewer','viewer','Read-only portal access',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL);
+INSERT INTO `roles` VALUES (1,'Super Admin','super_admin','Full system access',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Admin','admin','Manage content and users',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'Viewer','viewer','Read-only portal access',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'Partner','partner','Manage projects for one partner organisation',1,'2026-05-11 08:39:15','2026-05-11 08:39:15',NULL,NULL);
 /*!40000 ALTER TABLE `roles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -480,8 +514,8 @@ DROP TABLE IF EXISTS `settings`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `settings` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `setting_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `setting_value` mediumtext COLLATE utf8mb4_unicode_ci,
+  `setting_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `setting_value` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -493,7 +527,7 @@ CREATE TABLE `settings` (
   KEY `fk_settings_updated_by` (`updated_by`),
   CONSTRAINT `fk_settings_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_settings_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -502,7 +536,7 @@ CREATE TABLE `settings` (
 
 LOCK TABLES `settings` WRITE;
 /*!40000 ALTER TABLE `settings` DISABLE KEYS */;
-INSERT INTO `settings` VALUES (1,'portal.name','\"Project Reporting Portal\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'portal.logo_path','null',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'portal.header_html','\"<p>Official project reporting</p>\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(4,'portal.footer_html','\"<p>&copy; 2026</p>\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(5,'email.smtp_host','\"\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,'email.smtp_port','\"587\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'email.smtp_user','\"\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,'email.smtp_secure','\"false\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(9,'email.from_address','\"\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL);
+INSERT INTO `settings` VALUES (1,'portal.name','\"Project Reporting Portal\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'portal.logo_path','null',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,'portal.header_html','\"<p>Official project reporting</p>\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(4,'portal.footer_html','\"<p>&copy; 2026</p>\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(5,'email.smtp_host','\"\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,'email.smtp_port','\"587\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'email.smtp_user','\"\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,'email.smtp_secure','\"false\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(9,'email.from_address','\"\"',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(19,'portal.nav_title','\"Project Report\"',1,'2026-05-11 08:39:15','2026-05-11 08:39:15',NULL,NULL);
 /*!40000 ALTER TABLE `settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -515,8 +549,8 @@ DROP TABLE IF EXISTS `states`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `states` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `code` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `sort_order` int NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -529,7 +563,7 @@ CREATE TABLE `states` (
   KEY `fk_states_updated_by` (`updated_by`),
   CONSTRAINT `fk_states_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_states_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=145 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -538,7 +572,7 @@ CREATE TABLE `states` (
 
 LOCK TABLES `states` WRITE;
 /*!40000 ALTER TABLE `states` DISABLE KEYS */;
-INSERT INTO `states` VALUES (1,'Andhra Pradesh','AP',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Arunachal Pradesh','AR',0,2,'2026-04-07 07:56:04','2026-04-07 08:04:27',NULL,NULL),(3,'Assam','AS',0,3,'2026-04-07 07:56:04','2026-04-07 08:04:25',NULL,NULL),(4,'Bihar','BR',0,4,'2026-04-07 07:56:04','2026-04-07 08:03:34',NULL,NULL),(5,'Chhattisgarh','CG',0,5,'2026-04-07 07:56:04','2026-04-07 08:03:36',NULL,NULL),(6,'Goa','GA',1,6,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'Gujarat','GJ',1,7,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,'Haryana','HR',0,8,'2026-04-07 07:56:04','2026-04-07 08:03:39',NULL,NULL),(9,'Himachal Pradesh','HP',0,9,'2026-04-07 07:56:04','2026-04-07 08:03:39',NULL,NULL),(10,'Jharkhand','JH',0,10,'2026-04-07 07:56:04','2026-04-07 08:03:41',NULL,NULL),(11,'Karnataka','KA',1,11,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(12,'Kerala','KL',1,12,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(13,'Madhya Pradesh','MP',1,13,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(14,'Maharashtra','MH',1,14,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(15,'Manipur','MN',0,15,'2026-04-07 07:56:04','2026-04-07 08:03:46',NULL,NULL),(16,'Meghalaya','ML',0,16,'2026-04-07 07:56:04','2026-04-07 08:03:49',NULL,NULL),(17,'Mizoram','MZ',0,17,'2026-04-07 07:56:04','2026-04-07 08:03:50',NULL,NULL),(18,'Nagaland','NL',0,18,'2026-04-07 07:56:04','2026-04-07 08:03:51',NULL,NULL),(19,'Odisha','OR',1,19,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(20,'Punjab','PB',0,20,'2026-04-07 07:56:04','2026-04-07 08:03:54',NULL,NULL),(21,'Rajasthan','RJ',0,21,'2026-04-07 07:56:04','2026-04-07 08:03:57',NULL,NULL),(22,'Sikkim','SK',0,22,'2026-04-07 07:56:04','2026-04-07 08:03:58',NULL,NULL),(23,'Tamil Nadu','TN',1,23,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(24,'Telangana','TS',1,24,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(25,'Tripura','TR',0,25,'2026-04-07 07:56:04','2026-04-07 08:04:01',NULL,NULL),(26,'Uttar Pradesh','UP',0,26,'2026-04-07 07:56:04','2026-04-07 08:04:03',NULL,NULL),(27,'Uttarakhand','UK',0,27,'2026-04-07 07:56:04','2026-04-07 08:04:04',NULL,NULL),(28,'West Bengal','WB',0,28,'2026-04-07 07:56:04','2026-04-07 08:04:05',NULL,NULL),(29,'Andaman and Nicobar Islands','AN',0,29,'2026-04-07 07:56:04','2026-04-07 08:04:06',NULL,NULL),(30,'Chandigarh','CH',0,30,'2026-04-07 07:56:04','2026-04-07 08:04:07',NULL,NULL),(31,'Dadra and Nagar Haveli and Daman and Diu','DN',0,31,'2026-04-07 07:56:04','2026-04-07 08:04:08',NULL,NULL),(32,'Delhi','DL',0,32,'2026-04-07 07:56:04','2026-04-07 08:04:10',NULL,NULL),(33,'Jammu and Kashmir','JK',0,33,'2026-04-07 07:56:04','2026-04-07 08:04:11',NULL,NULL),(34,'Ladakh','LA',0,34,'2026-04-07 07:56:04','2026-04-07 08:04:12',NULL,NULL),(35,'Lakshadweep','LD',0,35,'2026-04-07 07:56:04','2026-04-07 08:04:13',NULL,NULL),(36,'Puducherry','PY',0,36,'2026-04-07 07:56:04','2026-04-07 08:04:13',NULL,NULL);
+INSERT INTO `states` VALUES (1,'Andhra Pradesh','AP',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'Arunachal Pradesh','AR',1,2,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(3,'Assam','AS',1,3,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(4,'Bihar','BR',1,4,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(5,'Chhattisgarh','CG',1,5,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(6,'Goa','GA',1,6,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,'Gujarat','GJ',1,7,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,'Haryana','HR',1,8,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(9,'Himachal Pradesh','HP',1,9,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(10,'Jharkhand','JH',1,10,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(11,'Karnataka','KA',1,11,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(12,'Kerala','KL',1,12,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(13,'Madhya Pradesh','MP',1,13,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(14,'Maharashtra','MH',1,14,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(15,'Manipur','MN',1,15,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(16,'Meghalaya','ML',1,16,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(17,'Mizoram','MZ',1,17,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(18,'Nagaland','NL',1,18,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(19,'Odisha','OR',1,19,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(20,'Punjab','PB',1,20,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(21,'Rajasthan','RJ',1,21,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(22,'Sikkim','SK',1,22,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(23,'Tamil Nadu','TN',1,23,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(24,'Telangana','TS',1,24,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(25,'Tripura','TR',1,25,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(26,'Uttar Pradesh','UP',1,26,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(27,'Uttarakhand','UK',1,27,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(28,'West Bengal','WB',1,28,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(29,'Andaman and Nicobar Islands','AN',1,29,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(30,'Chandigarh','CH',1,30,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(31,'Dadra and Nagar Haveli and Daman and Diu','DN',1,31,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(32,'Delhi','DL',1,32,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(33,'Jammu and Kashmir','JK',1,33,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(34,'Ladakh','LA',1,34,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(35,'Lakshadweep','LD',1,35,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(36,'Puducherry','PY',1,36,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL);
 /*!40000 ALTER TABLE `states` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -565,7 +599,7 @@ CREATE TABLE `submenu_roles` (
 
 LOCK TABLES `submenu_roles` WRITE;
 /*!40000 ALTER TABLE `submenu_roles` DISABLE KEYS */;
-INSERT INTO `submenu_roles` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(11,1),(12,1),(25,1),(26,1),(27,1),(1,2),(2,2),(3,2),(4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(11,2),(12,2),(25,2),(26,2),(27,2),(7,3),(8,3),(9,3),(10,3);
+INSERT INTO `submenu_roles` VALUES (1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(11,1),(12,1),(25,1),(26,1),(27,1),(28,1),(1,2),(2,2),(3,2),(4,2),(5,2),(6,2),(7,2),(8,2),(9,2),(11,2),(12,2),(25,2),(26,2),(27,2),(28,2),(7,3),(8,3),(9,3),(10,3),(7,7),(8,7);
 /*!40000 ALTER TABLE `submenu_roles` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -579,9 +613,9 @@ DROP TABLE IF EXISTS `submenus`;
 CREATE TABLE `submenus` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
   `menu_id` int unsigned NOT NULL,
-  `name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `slug` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `slug` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `sort_order` int NOT NULL DEFAULT '0',
   `status` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -595,7 +629,7 @@ CREATE TABLE `submenus` (
   CONSTRAINT `fk_sub_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_sub_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_submenus_menu` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -604,7 +638,7 @@ CREATE TABLE `submenus` (
 
 LOCK TABLES `submenus` WRITE;
 /*!40000 ALTER TABLE `submenus` DISABLE KEYS */;
-INSERT INTO `submenus` VALUES (1,5,'Portal & branding','portal-branding','/admin/settings/portal',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,5,'Email','email','/admin/settings/email',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,5,'Menus','menus','/admin/settings/menus',2,0,'2026-04-07 07:56:04','2026-04-07 11:22:31',NULL,NULL),(4,5,'Dynamic pages','pages','/admin/settings/pages',2,1,'2026-04-07 07:56:04','2026-04-07 11:22:31',NULL,NULL),(5,4,'Add State','states','/admin/states',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,4,'Add PAX','locations','/admin/locations',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,2,'Manage project','projects-manage','/admin/projects/manage',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,2,'Add project','projects-add','/admin/projects/new',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(9,2,'Project category','projects-category','/admin/projects/categories',2,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(10,2,'Approve project','projects-approve','/admin/projects/approve',3,0,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(11,3,'Add Users','users','/admin/users',0,1,'2026-04-07 07:56:04','2026-04-07 12:45:36',NULL,NULL),(12,3,'Add Roles','roles','/admin/roles',1,1,'2026-04-07 07:56:04','2026-04-07 12:46:19',NULL,NULL),(25,13,'Add Menu','menu-website-add-menu','/admin/settings/menu-website/add-menu',0,1,'2026-04-07 11:22:31','2026-04-07 11:22:31',NULL,NULL),(26,13,'Add Submenu','menu-website-add-submenu','/admin/settings/menu-website/add-submenu',1,1,'2026-04-07 11:22:31','2026-04-07 11:22:31',NULL,NULL),(27,5,'Application logs','application-logs','/admin/settings/logs',3,1,'2026-04-07 11:26:45','2026-04-07 11:29:49',NULL,NULL);
+INSERT INTO `submenus` VALUES (1,5,'Portal & branding','portal-branding','/admin/settings/portal',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,5,'Email','email','/admin/settings/email',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(3,5,'Menus','menus','/admin/settings/menus',2,0,'2026-04-07 07:56:04','2026-04-07 11:22:31',NULL,NULL),(4,5,'Dynamic pages','pages','/admin/settings/pages',2,1,'2026-04-07 07:56:04','2026-04-07 11:22:31',NULL,NULL),(5,4,'Add State','states','/admin/states',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(6,4,'Add PAX','locations','/admin/locations',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(7,2,'Manage project','projects-manage','/admin/projects/manage',0,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(8,2,'Add project','projects-add','/admin/projects/new',1,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(9,2,'Project category','projects-category','/admin/projects/categories',2,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(10,2,'Approve project','projects-approve','/admin/projects/approve',3,0,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(11,3,'Users','users','/admin/users',0,1,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(12,3,'Roles','roles','/admin/roles',1,1,'2026-04-07 07:56:04','2026-05-11 08:39:15',NULL,NULL),(25,13,'Add Menu','menu-website-add-menu','/admin/settings/menu-website/add-menu',0,1,'2026-04-07 11:22:31','2026-04-07 11:22:31',NULL,NULL),(26,13,'Add Submenu','menu-website-add-submenu','/admin/settings/menu-website/add-submenu',1,1,'2026-04-07 11:22:31','2026-04-07 11:22:31',NULL,NULL),(27,5,'Application logs','application-logs','/admin/settings/logs',3,1,'2026-04-07 11:26:45','2026-04-07 11:29:49',NULL,NULL),(28,4,'Partners','masters-partners','/admin/partners',2,1,'2026-05-11 08:31:49','2026-05-11 08:31:49',NULL,NULL);
 /*!40000 ALTER TABLE `submenus` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -644,10 +678,11 @@ DROP TABLE IF EXISTS `users`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `users` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `display_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `email` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `display_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `partner_id` int unsigned DEFAULT NULL COMMENT 'NULL = global admin',
   `is_active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '1 active, 0 inactive (row status)',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -658,9 +693,11 @@ CREATE TABLE `users` (
   UNIQUE KEY `uk_users_username` (`username`),
   KEY `fk_users_created_by` (`created_by`),
   KEY `fk_users_updated_by` (`updated_by`),
+  KEY `idx_users_partner` (`partner_id`),
   CONSTRAINT `fk_users_created_by` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_users_partner` FOREIGN KEY (`partner_id`) REFERENCES `partners` (`id`) ON DELETE RESTRICT,
   CONSTRAINT `fk_users_updated_by` FOREIGN KEY (`updated_by`) REFERENCES `users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -669,17 +706,9 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin@example.com','admin','$2a$12$A9Z/C/1K4AjNYzhmafs1hehCwMbmNWIKcGnXbZV6psgOp4Jq30B9O','Administrator',1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL);
+INSERT INTO `users` VALUES (1,'admin@example.com','admin','$2a$12$A9Z/C/1K4AjNYzhmafs1hehCwMbmNWIKcGnXbZV6psgOp4Jq30B9O','Administrator',NULL,1,'2026-04-07 07:56:04','2026-04-07 07:56:04',NULL,NULL),(2,'test@test.com','test_partner','$2a$12$4TXpNrf/ofM7biuVFBvwF./e0/neOe0PZ98YVnpFwL1lulhwL7ue.','test paretner',2,1,'2026-05-11 08:06:10','2026-05-11 09:01:24',1,NULL),(3,'test1@gmail.com','test1@gmail.com','$2a$12$NohUegGJ1l5DCZSslwb7reyrNkvO3WmUu2.dbhbAGgr/ACOscVXnS','test-gmail',1,1,'2026-05-11 08:38:30','2026-05-11 09:02:39',1,NULL),(4,'test3@gmail.com','test3@gmail.com','$2a$12$4p85zG1VurG2UlggcQmArOkEyjdTzLtfSukxBkvXpB.A9jXLiH70q','test 3',1,1,'2026-05-11 09:05:44','2026-05-11 09:05:44',1,NULL);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Dumping events for database 'project_dashboard'
---
-
---
--- Dumping routines for database 'project_dashboard'
---
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -690,4 +719,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-07 18:47:03
+-- Dump completed on 2026-05-11 15:26:12

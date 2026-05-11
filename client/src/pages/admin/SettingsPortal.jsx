@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import api from '../../api/client.js';
 import { uploadsUrl } from '../../config.js';
 import Spinner from '../../components/Spinner.jsx';
+import { toastSuccess } from '../../toastBus.js';
 
 export default function SettingsPortal() {
   const [s, setS] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
 
   async function load() {
     const { data } = await api.get('/admin/settings');
@@ -22,17 +22,17 @@ export default function SettingsPortal() {
   async function save(e) {
     e.preventDefault();
     setSaving(true);
-    setMsg('');
     try {
       await api.patch('/admin/settings', {
         'portal.name': s['portal.name'],
+        'portal.nav_title': s['portal.nav_title'],
         'portal.header_html': s['portal.header_html'],
         'portal.footer_html': s['portal.footer_html'],
       });
-      setMsg('Saved.');
+      toastSuccess('Portal settings saved.');
       await load();
-    } catch (err) {
-      setMsg(err.response?.data?.error || 'Save failed');
+    } catch {
+      /* error toast from API client */
     } finally {
       setSaving(false);
     }
@@ -43,13 +43,12 @@ export default function SettingsPortal() {
     if (!file) return;
     const fd = new FormData();
     fd.append('logo', file);
-    setMsg('');
     try {
       await api.post('/admin/settings/logo', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setMsg('Logo updated.');
+      toastSuccess('Logo updated.');
       await load();
-    } catch (err) {
-      setMsg(err.response?.data?.error || 'Upload failed');
+    } catch {
+      /* error toast from API client */
     }
     e.target.value = '';
   }
@@ -70,6 +69,17 @@ export default function SettingsPortal() {
           />
         </label>
         <label>
+          Portal header tagline
+          <input
+            value={s['portal.nav_title'] ?? ''}
+            onChange={(e) => setS({ ...s, 'portal.nav_title': e.target.value })}
+            placeholder="e.g. Project Report"
+          />
+          <span className="muted" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+            Shown in the portal top bar beside the partner or portal name.
+          </span>
+        </label>
+        <label>
           Header HTML
           <textarea rows={4} value={s['portal.header_html'] ?? ''} onChange={(e) => setS({ ...s, 'portal.header_html': e.target.value })} />
         </label>
@@ -86,7 +96,6 @@ export default function SettingsPortal() {
           )}
           <input type="file" accept="image/*" onChange={uploadLogo} />
         </label>
-        {msg && <p className="muted">{msg}</p>}
         <button type="submit" className="btn btn-primary" disabled={saving}>
           {saving ? 'Saving…' : 'Save'}
         </button>

@@ -13,16 +13,18 @@ export async function loadUserAuthz(userId) {
   const pool = getPool();
   const [rows] = await pool.execute(
     `
-    SELECT u.id, u.email, u.username, u.display_name, u.is_active,
+    SELECT u.id, u.email, u.username, u.display_name, u.is_active, u.partner_id,
+           pr.name AS partner_name,
            GROUP_CONCAT(DISTINCT r.slug) AS role_slugs,
            GROUP_CONCAT(DISTINCT p.slug) AS perm_slugs
     FROM users u
+    LEFT JOIN partners pr ON pr.id = u.partner_id
     LEFT JOIN user_roles ur ON ur.user_id = u.id
     LEFT JOIN roles r ON r.id = ur.role_id AND r.status = 1
     LEFT JOIN role_permissions rp ON rp.role_id = r.id
     LEFT JOIN permissions p ON p.id = rp.permission_id
     WHERE u.id = :uid
-    GROUP BY u.id, u.email, u.username, u.display_name, u.is_active
+    GROUP BY u.id, u.email, u.username, u.display_name, u.is_active, u.partner_id, pr.name
     `,
     { uid: userId }
   );
@@ -36,6 +38,8 @@ export async function loadUserAuthz(userId) {
     email: u.email,
     username: u.username,
     displayName: u.display_name,
+    partnerId: u.partner_id != null ? Number(u.partner_id) : null,
+    partnerName: u.partner_name || null,
     roles,
     permissions,
   };
@@ -100,6 +104,7 @@ function accessPayload(user) {
     displayName: user.displayName,
     roles: user.roles,
     permissions: user.permissions,
+    partnerId: user.partnerId ?? null,
   };
 }
 
@@ -142,6 +147,8 @@ export async function login(username, password, meta = {}) {
       email: authz.email,
       username: authz.username,
       displayName: authz.displayName,
+      partnerId: authz.partnerId,
+      partnerName: authz.partnerName,
       roles: authz.roles,
       permissions: authz.permissions,
       adminNav: nav,
@@ -179,6 +186,8 @@ export async function refresh(refreshJwt) {
       email: authz.email,
       username: authz.username,
       displayName: authz.displayName,
+      partnerId: authz.partnerId,
+      partnerName: authz.partnerName,
       roles: authz.roles,
       permissions: authz.permissions,
       adminNav: nav,
