@@ -4,12 +4,12 @@
  */
 
 //local
-const API_BASE_URL = 'http://localhost:4000/api';
-const UPLOADS_BASE_URL = 'http://localhost:4000/uploads';
+// const API_BASE_URL = 'http://localhost:4000/api';
+// const UPLOADS_BASE_URL = 'http://localhost:4000/uploads';
 
 // //production
-// const API_BASE_URL = 'https://api.y4d.ngo/api';
-// const UPLOADS_BASE_URL = 'https://api.y4d.ngo/uploads';
+const API_BASE_URL = 'https://api.y4d.ngo/api';
+const UPLOADS_BASE_URL = 'https://api.y4d.ngo/uploads';
 
 function normalizeApiBase(url) {
   const u = String(url).trim();

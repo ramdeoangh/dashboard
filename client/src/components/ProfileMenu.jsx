@@ -104,9 +104,9 @@ export default function ProfileMenu({ prefix, onSignOut, variant = 'admin' }) {
         }
         .profile-menu-item:hover { background: var(--gray-light); color: var(--navy); }
         .profile-menu--portal {
-          --profile-trigger-border: rgba(255, 255, 255, 0.45);
-          --profile-trigger-fg: var(--white);
-          --profile-trigger-hover: rgba(255, 255, 255, 0.12);
+          --profile-trigger-border: rgba(42, 38, 36, 0.18);
+          --profile-trigger-fg: var(--text-dark);
+          --profile-trigger-hover: var(--orange-soft);
         }
       `}</style>
     </div>

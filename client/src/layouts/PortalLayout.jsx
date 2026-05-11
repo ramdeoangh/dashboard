@@ -59,39 +59,40 @@ export default function PortalLayout() {
       <style>{`
         .portal-root { min-height: 100%; display: flex; flex-direction: column; }
         .topnav {
-          background: var(--navy);
+          background: var(--header-bar, var(--white));
           display: flex; align-items: center; justify-content: space-between;
           padding: 0 20px; min-height: 52px; flex-wrap: wrap; gap: 8px 16px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+          border-bottom: 3px solid var(--header-accent-border, var(--orange));
+          box-shadow: 0 1px 0 rgba(var(--orange-rgb), 0.06), 0 4px 20px rgba(42, 38, 36, 0.06);
           position: sticky; top: 0; z-index: 50;
         }
         .nav-brand { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .nav-logo {
-          width: 36px; height: 36px; border-radius: 8px; background: var(--gold);
+          width: 36px; height: 36px; border-radius: 8px; background: var(--orange);
           display: flex; align-items: center; justify-content: center;
-          font-weight: 700; font-size: 13px; color: var(--navy);
+          font-weight: 700; font-size: 13px; color: var(--white);
           overflow: hidden; flex-shrink: 0;
         }
         .nav-logo img {
           width: 100%; height: 100%; object-fit: cover; display: block;
         }
-        .nav-title span { color: var(--white); font-weight: 600; font-size: 15px; display: block; }
+        .nav-title span { color: var(--text-dark); font-weight: 600; font-size: 15px; display: block; }
         .portal-nav-tagline {
           flex: 1;
           text-align: center;
-          color: var(--teal-light);
+          color: var(--gray-text);
           font-weight: 500;
           font-size: 14px;
           min-width: 120px;
         }
         .nav-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
         .admin-link {
-          color: var(--gold);
+          color: var(--orange);
           font-weight: 600;
           font-size: 14px;
           text-decoration: none;
         }
-        .admin-link:hover { color: var(--white); }
+        .admin-link:hover { color: var(--orange-dark); text-decoration: underline; }
         .portal-main { flex: 1; padding: 20px; max-width: 1400px; margin: 0 auto; width: 100%; }
       `}</style>
     </div>

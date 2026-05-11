@@ -170,7 +170,7 @@ export default function AdminLayout() {
         .admin-side.collapsed .side-title .side-monogram { display: flex; }
         .admin-side .side-title .side-monogram { display: none; }
         .side-head {
-          padding: 12px 10px; background: var(--navy); color: var(--white);
+          padding: 12px 10px; background: var(--orange); color: var(--white);
           display: flex; justify-content: space-between; align-items: center; gap: 8px;
           font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;
         }
@@ -188,7 +188,7 @@ export default function AdminLayout() {
         .nav-section { border-bottom: 1px solid var(--gray-light); }
         .nav-top {
           display: flex; align-items: center; gap: 10px;
-          padding: 10px 14px; font-weight: 600; font-size: 13px; color: var(--navy);
+          padding: 10px 14px; font-weight: 600; font-size: 13px; color: var(--text-dark);
           text-decoration: none; border: none; width: 100%; text-align: left; background: none;
           box-sizing: border-box;
         }
@@ -198,15 +198,15 @@ export default function AdminLayout() {
         .nav-top.active, .side-nav .nav-sub a.active {
           background: var(--teal-light); border-left: 4px solid var(--teal); padding-left: 10px;
         }
-        .nav-top.toggle.child-active { background: rgba(0, 105, 120, 0.08); }
+        .nav-top.toggle.child-active { background: var(--orange-soft); }
         .nav-sub a {
           display: flex; align-items: center; gap: 8px;
           padding: 8px 14px 8px 22px; font-size: 13px; color: var(--gray-text); text-decoration: none;
         }
-        .nav-sub a.active { color: var(--navy); font-weight: 600; }
+        .nav-sub a.active { color: var(--orange-dark); font-weight: 600; }
         .side-foot { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 12px; }
         .side-foot a {
-          display: flex; align-items: center; gap: 10px; color: var(--navy); text-decoration: none; font-weight: 600;
+          display: flex; align-items: center; gap: 10px; color: var(--orange); text-decoration: none; font-weight: 600;
         }
         .admin-side.collapsed .nav-top,
         .admin-side.collapsed .nav-top.toggle {
@@ -221,18 +221,19 @@ export default function AdminLayout() {
         .admin-body { flex: 1; display: flex; flex-direction: column; min-width: 0; }
         .admin-top {
           display: flex; justify-content: space-between; align-items: center; gap: 12px;
-          padding: 12px 20px; background: var(--white); border-bottom: 1px solid var(--border);
+          padding: 12px 20px; background: var(--white);
+          border-bottom: 2px solid rgba(var(--orange-rgb), 0.2);
         }
         .admin-top-start { display: flex; align-items: center; gap: 4px; }
         .admin-top-end { display: flex; align-items: center; gap: 12px; }
         .admin-top-bar-btn {
-          color: var(--navy); font-size: 20px; padding: 6px 8px; border-radius: 6px;
+          color: var(--text-dark); font-size: 20px; padding: 6px 8px; border-radius: 6px;
           background: transparent; border: none; cursor: pointer;
           display: inline-flex; align-items: center; justify-content: center;
           text-decoration: none;
         }
-        .admin-top-bar-btn:hover { background: var(--gray-light); }
-        .admin-globe-svg { display: flex; align-items: center; justify-content: center; color: var(--navy-mid); }
+        .admin-top-bar-btn:hover { background: var(--orange-soft); }
+        .admin-globe-svg { display: flex; align-items: center; justify-content: center; color: var(--orange); }
         .admin-content { padding: 20px; flex: 1; background: var(--off-white); }
         .chev { opacity: 0.7; font-size: 14px; flex-shrink: 0; }
       `}</style>

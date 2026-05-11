@@ -240,7 +240,7 @@ export default function ProjectDetailModal({ project, onClose }) {
           position: fixed;
           inset: 0;
           z-index: 70;
-          background: rgba(18, 40, 80, 0.45);
+          background: rgba(60, 32, 20, 0.35);
           backdrop-filter: blur(4px);
           display: flex;
           align-items: center;
@@ -265,7 +265,7 @@ export default function ProjectDetailModal({ project, onClose }) {
           justify-content: space-between;
           gap: 12px;
           padding: 20px 20px 18px;
-          background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 55%, var(--teal-mid) 160%);
+          background: linear-gradient(135deg, var(--orange) 0%, var(--orange-light) 55%, #ffb89a 160%);
           color: var(--white);
         }
         .pdm-hero__inner { min-width: 0; flex: 1; }
@@ -293,7 +293,7 @@ export default function ProjectDetailModal({ project, onClose }) {
           background: rgba(255, 255, 255, 0.2);
           border: 1px solid rgba(255, 255, 255, 0.35);
         }
-        .pdm-badge--cat { background: rgba(255, 255, 255, 0.95); color: var(--navy); border-color: transparent; }
+        .pdm-badge--cat { background: rgba(255, 255, 255, 0.95); color: var(--orange-dark); border-color: transparent; }
         .pdm-close {
           flex-shrink: 0;
           background: rgba(255, 255, 255, 0.15);
@@ -337,7 +337,7 @@ export default function ProjectDetailModal({ project, onClose }) {
           margin: 0 0 8px;
           font-size: 12px;
           font-weight: 700;
-          color: var(--navy);
+          color: var(--orange-dark);
         }
         .pdm-text {
           margin: 0;

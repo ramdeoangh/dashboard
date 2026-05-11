@@ -115,9 +115,9 @@ export function ToastProvider({ children }) {
           opacity: 1;
         }
         .toast-success {
-          background: linear-gradient(135deg, #0d3d3f, #124f52);
-          color: var(--teal-light, #c0e6f5);
-          border-color: rgba(44, 198, 210, 0.35);
+          background: linear-gradient(135deg, var(--orange, #e6430c), var(--orange-light, #fa7342));
+          color: #fffaf8;
+          border-color: rgba(255, 255, 255, 0.35);
         }
         .toast-error {
           background: linear-gradient(135deg, #3a1518, #4a1f24);
@@ -125,9 +125,9 @@ export function ToastProvider({ children }) {
           border-color: rgba(192, 57, 43, 0.45);
         }
         .toast-info {
-          background: linear-gradient(135deg, #1a2840, #243352);
-          color: var(--teal-light, #c0e6f5);
-          border-color: rgba(106, 198, 205, 0.35);
+          background: linear-gradient(135deg, #ffffff, var(--orange-soft, #fff5f0));
+          color: var(--text-dark, #2a2624);
+          border-color: rgba(var(--orange-rgb), 0.45);
         }
       `}</style>
     </ToastContext.Provider>

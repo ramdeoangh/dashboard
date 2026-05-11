@@ -96,27 +96,20 @@ export default function Login() {
           padding: clamp(32px, 5vw, 56px);
           display: flex;
           align-items: flex-end;
-          color: var(--white);
-          background: linear-gradient(145deg, #0d1f3d 0%, var(--navy-dark) 38%, var(--navy-mid) 100%);
+          color: var(--text-dark);
+          background: var(--login-brand-gradient);
         }
 
         .login-brand__mesh {
           position: absolute;
           inset: 0;
-          opacity: 0.45;
+          opacity: 0.5;
           background-image:
-            radial-gradient(circle at 20% 30%, rgba(44, 198, 210, 0.35) 0%, transparent 45%),
-            radial-gradient(circle at 80% 20%, rgba(251, 179, 33, 0.2) 0%, transparent 40%),
-            linear-gradient(
-              rgba(255, 255, 255, 0.04) 1px,
-              transparent 1px
-            ),
-            linear-gradient(
-              90deg,
-              rgba(255, 255, 255, 0.04) 1px,
-              transparent 1px
-            );
-          background-size: auto, auto, 48px 48px, 48px 48px;
+            radial-gradient(circle at 18% 25%, rgba(var(--orange-rgb), 0.12) 0%, transparent 42%),
+            radial-gradient(circle at 88% 12%, rgba(var(--orange-rgb), 0.18) 0%, transparent 38%),
+            linear-gradient(rgba(var(--orange-rgb), 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(var(--orange-rgb), 0.04) 1px, transparent 1px);
+          background-size: auto, auto, 44px 44px, 44px 44px;
         }
 
         .login-brand__orb {
@@ -128,27 +121,27 @@ export default function Login() {
         .login-brand__orb--1 {
           width: min(420px, 55vw);
           height: min(420px, 55vw);
-          top: -18%;
-          right: -12%;
-          background: radial-gradient(circle at 35% 35%, rgba(44, 198, 210, 0.55), rgba(27, 58, 107, 0.15) 70%);
-          opacity: 0.9;
+          top: -22%;
+          right: -14%;
+          background: radial-gradient(circle at 30% 30%, rgba(250, 115, 66, 0.35), rgba(255, 255, 255, 0) 68%);
+          opacity: 0.95;
         }
 
         .login-brand__orb--2 {
-          width: min(280px, 40vw);
-          height: min(280px, 40vw);
-          bottom: 8%;
-          left: -8%;
-          background: radial-gradient(circle at 60% 40%, rgba(251, 179, 33, 0.35), transparent 65%);
-          opacity: 0.85;
+          width: min(260px, 42vw);
+          height: min(260px, 42vw);
+          bottom: 5%;
+          left: -10%;
+          background: radial-gradient(circle at 55% 45%, rgba(var(--orange-rgb), 0.2), transparent 62%);
+          opacity: 0.9;
         }
 
         .login-brand__orb--3 {
-          width: min(180px, 28vw);
-          height: min(180px, 28vw);
-          top: 42%;
-          left: 28%;
-          background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 70%);
+          width: min(160px, 28vw);
+          height: min(160px, 28vw);
+          top: 38%;
+          left: 22%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 0.85), transparent 72%);
         }
 
         .login-brand__content {
@@ -163,8 +156,7 @@ export default function Login() {
           font-weight: 700;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: var(--teal-light);
-          opacity: 0.95;
+          color: var(--orange);
         }
 
         .login-brand__title {
@@ -172,7 +164,7 @@ export default function Login() {
           font-size: clamp(1.75rem, 3.2vw, 2.35rem);
           font-weight: 700;
           line-height: 1.15;
-          color: var(--white);
+          color: var(--text-dark);
           letter-spacing: -0.02em;
         }
 
@@ -180,7 +172,7 @@ export default function Login() {
           margin: 0 0 24px;
           font-size: 15px;
           line-height: 1.55;
-          color: rgba(255, 255, 255, 0.82);
+          color: var(--gray-text);
           max-width: 38ch;
         }
 
@@ -191,7 +183,7 @@ export default function Login() {
           display: grid;
           gap: 10px;
           font-size: 14px;
-          color: rgba(255, 255, 255, 0.88);
+          color: var(--text-dark);
         }
 
         .login-brand__list li {
@@ -205,8 +197,8 @@ export default function Login() {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          background: var(--gold);
-          box-shadow: 0 0 0 3px rgba(251, 179, 33, 0.25);
+          background: var(--orange);
+          box-shadow: 0 0 0 3px rgba(var(--orange-rgb), 0.22);
           flex-shrink: 0;
         }
 
@@ -215,7 +207,7 @@ export default function Login() {
           align-items: center;
           justify-content: center;
           padding: clamp(24px, 4vw, 48px);
-          background: var(--off-white);
+          background: var(--white);
           border-left: 1px solid var(--border);
         }
 
@@ -223,7 +215,8 @@ export default function Login() {
           width: 100%;
           max-width: 420px;
           padding: clamp(20px, 3vw, 28px);
-          box-shadow: 0 8px 32px rgba(27, 58, 107, 0.1);
+          box-shadow: var(--shadow-strong, 0 8px 28px rgba(42, 38, 36, 0.12));
+          border-color: rgba(var(--orange-rgb), 0.12);
         }
 
         .login-card__subtitle {
